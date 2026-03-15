@@ -12,3 +12,6 @@ rSrvTemp.pkl
 # Results
 *.bmp
 _data/
+
+# Saved data
+saved_data/
