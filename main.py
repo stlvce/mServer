@@ -2,44 +2,39 @@ import socket
 import time
 
 from settings.server import rSrv, ans
-from settings.init_variables import *  # noqa: F403
-from helpers import send_message, print_log, get_params
+from state import state
+from helpers import send_message, print_log
+from helpers.params import apply_params, init_params
 from scripts import get_traekt, get_mixyz, do_sign_mod, calc_surface
 
 
 def server_run():
     print(f"UDP server running with port {rSrv.serverRecvPort}")
-    rSrv.tStart = time.time()  # Время запуска программы
+    init_params(state)  # Связываем apply_params с глобальным state
+    rSrv.tStart = time.time()
     rSrv.server_info = socket.getaddrinfo(
         "localhost", rSrv.serverRecvPort, socket.AF_UNSPEC, socket.SOCK_DGRAM
-    )  # Информация о сервере
-    rSrv.u = socket.socket(
-        socket.AF_INET, socket.SOCK_DGRAM
-    )  # Создание порта для получения сообщений
+    )
+    rSrv.u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     rSrv.u.bind((rSrv.serverIp, rSrv.serverRecvPort))
-    rSrv.u.settimeout(1.0)  # Устанавливаем таймаут в 1 секунду
-    send_message(
-        f"Hello from python mServer {ans}"
-    )  # Отправка приветственного сообщения
+    rSrv.u.settimeout(1.0)
+    send_message(f"Hello from python mServer {ans}")
 
     try:
         while rSrv.cmd != "exit":
             try:
-                data = rSrv.u.recvfrom(4096)  # Ожидание запроса
-                rSrv.cmd = data[0].decode()  # Получение сообщения из запроса
-                print_log(
-                    rSrv.cmd, data[1]
-                )  # Вывод в логи сообщение, которое пришло с SamRLSim
+                data = rSrv.u.recvfrom(4096)
+                rSrv.cmd = data[0].decode()
+                print_log(rSrv.cmd, data[1])
 
-                vars = []  # Параметры из запроса для выполнения команд
-                commands = []  # Команды, которые необходимо выполнить
+                vars_list = []
+                commands = []
 
                 for i in rSrv.cmd.split("; "):
                     if i.strip() == "":
                         continue
-
                     if "=" in i:
-                        vars.append(i)
+                        vars_list.append(i)
                     else:
                         commands.append(i)
 
@@ -62,64 +57,48 @@ def server_run():
                     )
                     continue
 
-                # Установка констант
-                # if "Set_Consts" in commands:
-                #     send_message("Ok. Consts set")
+                # Применяем параметры через безопасный apply_params
+                apply_params(vars_list)
 
-                """
-                Сохранения в глобальный контекст параметров и выполнение команд из запроса
-                """
-
-                # Выполняем присваивание
-                parsed_params = get_params(vars)
-                for el in parsed_params:
-                    print("Параметр", el)
-                    exec(el, globals())
-
-                # Шаг: РЛС-МИ
                 if "Get_MiXyZ" in commands:
                     get_mixyz(
-                        Nmax=globals()["Mi"].Nmax,
-                        Rs=globals()["Mi"].Rs,
-                        Rz=globals()["Mi"].Rz,
-                        Ry=globals()["Mi"].Ry,
-                        Zmax=globals()["Mi"].Zmax,
-                        Ymax=globals()["Mi"].Ymax,
-                        figext=globals()["test"].figext,
+                        Nmax=state.Mi.Nmax,
+                        Rs=state.Mi.Rs,
+                        Rz=state.Mi.Rz,
+                        Ry=state.Mi.Ry,
+                        Zmax=state.Mi.Zmax,
+                        Ymax=state.Mi.Ymax,
+                        figext=state.test.figext,
                         result_path="resultFig1.bmp",
                     )
-
                     send_message("Ok. Get_MiXyZ called")
 
                 # Шаг: Траект. Цель
                 if "Get_Traekt" in commands:
                     get_traekt(
-                        Nimp=int(globals()["Rs"].Nimp),
-                        Xa=int(globals()["Tr"].Xa),
-                        Ya=int(globals()["Tr"].Ya),
-                        Za=int(globals()["Tr"].Za),
-                        Vx=int(globals()["Tr"].Vx),
-                        Vy=int(globals()["Tr"].Vy),
-                        Vz=int(globals()["Tr"].Vz),
-                        St_N=int(globals()["St"].N),
-                        St_Xs=int(globals()["Tr"].Xa) + 20,
-                        St_Ys=int(globals()["Tr"].Ya),
-                        St_Zs=int(globals()["Tr"].Za),
+                        Nimp=int(state.Rs.Nimp),
+                        Xa=int(state.Tr.Xa),
+                        Ya=int(state.Tr.Ya),
+                        Za=int(state.Tr.Za),
+                        Vx=int(state.Tr.Vx),
+                        Vy=int(state.Tr.Vy),
+                        Vz=int(state.Tr.Vz),
+                        St_N=int(state.St.N),
+                        St_Xs=int(state.Tr.Xa) + 20,
+                        St_Ys=int(state.Tr.Ya),
+                        St_Zs=int(state.Tr.Za),
                     )
-
                     send_message("Ok. Get_Traekt called")
 
                 # Шаг: Фон
                 if "Get_Surface" in commands:
-                    cMass = calc_surface(globals())
+                    cMass = calc_surface(state)
                     print(cMass)
-
                     send_message("Ok. Get_Surface called")
 
                 # Шаг: Предрасчет
                 if "Do_SignMod" in commands:
-                    do_sign_mod(globals())
-
+                    do_sign_mod(state)
                     send_message("Ok. Do_SignMod called")
 
                 # Шаг: ПНМ
@@ -133,9 +112,13 @@ def server_run():
             # Обработка ошибок
             except Exception as e:
                 if e.__traceback__ is not None:
-                    rSrv.lastErr = f"{str(e)} In_file: {e.__traceback__.tb_frame.f_code.co_filename}, line {e.__traceback__.tb_lineno}"
+                    rSrv.lastErr = (
+                        f"{str(e)} In_file: "
+                        f"{e.__traceback__.tb_frame.f_code.co_filename}, "
+                        f"line {e.__traceback__.tb_lineno}"
+                    )
                 else:
-                    rSrv.lastErr = f"{str(e)}"
+                    rSrv.lastErr = str(e)
                 print(f"\n{rSrv.lastErr}")
                 send_message(rSrv.lastErr)
 

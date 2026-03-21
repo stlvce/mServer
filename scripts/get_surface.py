@@ -4,7 +4,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
 import io
 import sys
-from typing import Any
+
+from state import AppState
 
 _WIN32_CLIPBOARD_AVAILABLE = False
 try:
@@ -98,23 +99,19 @@ def send_image_to_clipboard(image: Image.Image):
     return True
 
 
-def calc_surface(globals: dict[str, Any] | None = None):
+def calc_surface(state: AppState):
     """
     Пересчёт подстилающей поверхности и построение сцены.
-    Теперь график копируется в буфер обмена (clipboard), а не сохраняется в файл.
     """
-    Sf = globals["Sf"]
-    print(Sf)
-    Tr = globals["Tr"]
-    St = globals["St"]
+    Sf = state.Sf
+    Tr = state.Tr
+    St = state.St
+
     Kr = [1, 1, 1, 1, 1, 1, 1, 1]
     DOR = [10] * 8
     Type = 4
-    test = globals["test"]
-    Ncr = globals["Ncr"]
-    FacetN = globals["FacetN"]
 
-    FacetN = max([Ncr + test.Nadir, FacetN, 1])
+    FacetN = max(state.Ncr + state.test.Nadir, state.FacetN, 1)
 
     cMass = np.zeros((13, FacetN))
     cMass[4, :] = 2 * np.pi * np.random.rand(FacetN)
@@ -122,7 +119,7 @@ def calc_surface(globals: dict[str, Any] | None = None):
     cMass[6, :] = Kr[min(Type, 7)]
     cMass[8, :] = np.deg2rad(DOR[min(Type, 7)]) / 2
 
-    FC = np.arange(Ncr, FacetN)
+    FC = np.arange(state.Ncr, FacetN)
     if len(FC) > 0:
         cX = np.random.randn(len(FC))
         cZ = np.random.randn(len(FC))
