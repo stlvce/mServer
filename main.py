@@ -2,10 +2,9 @@ import socket
 import time
 
 from settings.server import rSrv, ans
-from settings.init_variables import *
+from settings.init_variables import *  # noqa: F403
 from helpers import send_message, print_log, get_params
 from scripts import get_traekt, get_mixyz, do_sign_mod, calc_surface
-from tests import test_get_surface
 
 
 def server_run():
@@ -26,18 +25,14 @@ def server_run():
     try:
         while rSrv.cmd != "exit":
             try:
-                # Получение сообщения
-                data = rSrv.u.recvfrom(4096)
-                rSrv.cmd = data[0].decode()
-                print_log(rSrv.cmd, data[1])
+                data = rSrv.u.recvfrom(4096)  # Ожидание запроса
+                rSrv.cmd = data[0].decode()  # Получение сообщения из запроса
+                print_log(
+                    rSrv.cmd, data[1]
+                )  # Вывод в логи сообщение, которое пришло с SamRLSim
 
-                # Выполнение команды из сообщения
-                if "exit" in rSrv.cmd:
-                    break
-
-                # Получение из сообщения параметров и команд
-                vars = []
-                commands = []
+                vars = []  # Параметры из запроса для выполнения команд
+                commands = []  # Команды, которые необходимо выполнить
 
                 for i in rSrv.cmd.split("; "):
                     if i.strip() == "":
@@ -48,8 +43,12 @@ def server_run():
                     else:
                         commands.append(i)
 
+                # Выключение Python сервера
+                if "exit" in commands:
+                    break
+
                 # Вывод ans версии
-                if "ans" in rSrv.cmd:
+                if "ans" in commands:
                     ans_str = str(ans)
                     if len(ans_str) > 8000:
                         ans_str = ans_str[:8000] + " ..."
@@ -57,21 +56,25 @@ def server_run():
                     continue
 
                 # Отправка времени работы сервера
-                if "server time" in rSrv.cmd:
+                if "server time" in commands:
                     send_message(
                         f"Ok. Server uptime - {round(time.time() - rSrv.tStart)} s"
                     )
                     continue
+
+                # Установка констант
+                # if "Set_Consts" in commands:
+                #     send_message("Ok. Consts set")
+
+                """
+                Сохранения в глобальный контекст параметров и выполнение команд из запроса
+                """
 
                 # Выполняем присваивание
                 parsed_params = get_params(vars)
                 for el in parsed_params:
                     print("Параметр", el)
                     exec(el, globals())
-
-                # Установка констант
-                if "Set_Consts" in commands:
-                    send_message("Ok. Consts set")
 
                 # Шаг: РЛС-МИ
                 if "Get_MiXyZ" in commands:
@@ -108,30 +111,8 @@ def server_run():
 
                 # Шаг: Фон
                 if "Get_Surface" in commands:
-                    # TODO поменять вызов функции не на тествую
-                    test_get_surface()
-
-                    # calc_surface(
-                    #     {"Dspot": 50},
-                    #     {
-                    #         "Pos": globals()["Tr"].Pos,
-                    #         "Ang": globals()["Tr"].Ang,
-                    #         "N": 3,
-                    #     },
-                    #     {
-                    #         "Pos": globals()["St"].Pos,
-                    #         "N": int(globals()["St"].N),
-                    #     },
-                    #     {
-                    #         "Kr": [1, 1, 1, 1, 1, 1, 1, 1],
-                    #         "DOR": [10] * 8,
-                    #         "dH": 1,
-                    #         "Type": 4,  # Лес
-                    #         "test": {"Nadir": 0},
-                    #         "Ncr": 0,
-                    #     },
-                    #     result_path="surface.bmp",
-                    # )
+                    cMass = calc_surface(globals())
+                    print(cMass)
 
                     send_message("Ok. Get_Surface called")
 

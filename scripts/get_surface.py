@@ -4,6 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
 import io
 import sys
+from typing import Any
 
 _WIN32_CLIPBOARD_AVAILABLE = False
 try:
@@ -16,7 +17,7 @@ except ImportError:
 
 
 def gen_forest(
-    N_trees=50,
+    n_trees=50,
     area_size=(200, 200),
     h_mean=20,
     h_std=5,
@@ -27,12 +28,12 @@ def gen_forest(
     """
     Генерация леса (Type=4).
     """
-    x = (np.random.rand(N_trees) - 0.5) * area_size[0]
-    z = (np.random.rand(N_trees) - 0.5) * area_size[1]
-    h = np.abs(np.random.normal(h_mean, h_std, N_trees))
-    r = np.abs(np.random.normal(r_mean, r_std, N_trees))
+    x = (np.random.rand(n_trees) - 0.5) * area_size[0]
+    z = (np.random.rand(n_trees) - 0.5) * area_size[1]
+    h = np.abs(np.random.normal(h_mean, h_std, n_trees))
+    r = np.abs(np.random.normal(r_mean, r_std, n_trees))
 
-    y_base = np.full(N_trees, base_height)
+    y_base = np.full(n_trees, base_height)
     y_top = base_height + h
 
     return {
@@ -97,52 +98,54 @@ def send_image_to_clipboard(image: Image.Image):
     return True
 
 
-def calc_surface(Sf, Tr, St, params, result_path=None):
+def calc_surface(globals: dict[str, Any] | None = None):
     """
     Пересчёт подстилающей поверхности и построение сцены.
     Теперь график копируется в буфер обмена (clipboard), а не сохраняется в файл.
-    Параметр result_path игнорируется (оставлен для совместимости).
     """
-    Kr = params["Kr"]
-    DOR = params["DOR"]
-    dH = params["dH"]
-    test = params["test"]
-    Ncr = params.get("Ncr", 0)
+    Sf = globals["Sf"]
+    print(Sf)
+    Tr = globals["Tr"]
+    St = globals["St"]
+    Kr = [1, 1, 1, 1, 1, 1, 1, 1]
+    DOR = [10] * 8
+    Type = 4
+    test = globals["test"]
+    Ncr = globals["Ncr"]
+    FacetN = globals["FacetN"]
 
-    FacetN = max([Ncr + test.get("Nadir", 0), params.get("FacetN", 1), 1])
+    FacetN = max([Ncr + test.Nadir, FacetN, 1])
+
     cMass = np.zeros((13, FacetN))
-
     cMass[4, :] = 2 * np.pi * np.random.rand(FacetN)
-    cMass[5, :] = params["Type"]
-    cMass[6, :] = Kr[min(params["Type"], 7)]
-    cMass[8, :] = np.deg2rad(DOR[min(params["Type"], 7)]) / 2
+    cMass[5, :] = Type
+    cMass[6, :] = Kr[min(Type, 7)]
+    cMass[8, :] = np.deg2rad(DOR[min(Type, 7)]) / 2
 
     FC = np.arange(Ncr, FacetN)
     if len(FC) > 0:
         cX = np.random.randn(len(FC))
         cZ = np.random.randn(len(FC))
-        cMass[0, FC] = Sf["Dspot"] * cX + np.mean(Tr["Pos"][:-1, 0])
-        cMass[2, FC] = Sf["Dspot"] * cZ + np.mean(Tr["Pos"][:-1, 2])
+        cMass[0, FC] = Sf.Dspot * cX + np.mean(Tr.Pos[:-1, 0])
+        cMass[2, FC] = Sf.Dspot * cZ + np.mean(Tr.Pos[:-1, 2])
         cMass[1, FC] = 0
 
+    # Построение графика
     fig = plt.figure(figsize=(6, 6), dpi=100)
     ax: Axes3D = fig.add_subplot(111, projection="3d")
+    ax.plot3D(Tr.Pos[:, 0], Tr.Pos[:, 2], Tr.Pos[:, 1], "-xm", label="Траектория")
 
-    ax.plot3D(
-        Tr["Pos"][:, 0], Tr["Pos"][:, 2], Tr["Pos"][:, 1], "-xm", label="Траектория"
-    )
-
-    if St["N"] > 0:
-        for n in range(St["N"]):
+    if St.N > 0:
+        for n in range(St.N):
             print(
-                St["Pos"][:, 0, n],
-                St["Pos"][:, 2, n],
-                St["Pos"][:, 1, n],
+                St.Pos[:, 0, n],
+                St.Pos[:, 2, n],
+                St.Pos[:, 1, n],
                 np.array([1, 1, 1]),
             )
             ax.plot3D(
-                St["Pos"][:, 0, n],
-                St["Pos"][:, 2, n],
+                St.Pos[:, 0, n],
+                St.Pos[:, 2, n],
                 [100, 100, 100],
                 "-dr",
                 label=f"Локатор {n + 1}",
@@ -152,8 +155,9 @@ def calc_surface(Sf, Tr, St, params, result_path=None):
         cMass[0, :], cMass[2, :], cMass[1, :], c="g", s=5, alpha=0.6, label="Surface"
     )
 
-    if params["Type"] == 4:
-        forest = gen_forest(N_trees=100, area_size=(400, 400), base_height=0)
+    # Моделирование леса
+    if Type == 4:
+        forest = gen_forest(n_trees=100, area_size=(400, 400), base_height=0)
         plot_forest(forest, ax)
 
     ax.set_xlabel("x [м]")

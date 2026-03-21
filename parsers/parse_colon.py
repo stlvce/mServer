@@ -1,6 +1,7 @@
 from typing import List
 
 
+# 1:1 = [1] / 1:2 = [1, 2] / .* поэлементное умнож / в функции подставляется тольк один элемент
 def parse_colon(a: str) -> List[int]:
     param = a.split("=")
     param_range = param[1].split(":")
