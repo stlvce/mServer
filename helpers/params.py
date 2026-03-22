@@ -27,6 +27,8 @@ def apply_params(vars_list: List[str]):
     """
     for var in vars_list:
         var = var.strip()
+        print(var)
+
         if not var:
             continue
 

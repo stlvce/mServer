@@ -4,38 +4,14 @@ import time
 from settings.server import rSrv, ans
 from state import state
 from helpers.params import apply_params, init_params
+from helpers.format_error import format_error
 from scripts import get_traekt, get_mixyz, do_sign_mod, calc_surface, do_step
 
 
-def _format_error(e: Exception) -> str:
-    """
-    Возвращает сообщение об ошибке с указанием файла и строки
-    где исключение реально возникло (последний фрейм traceback).
-    """
-    import traceback
-
-    tb = e.__traceback__
-    if tb is None:
-        return str(e)
-
-    # Идём до последнего фрейма в цепочке
-    while tb.tb_next is not None:
-        tb = tb.tb_next
-
-    filename = tb.tb_frame.f_code.co_filename
-    lineno = tb.tb_lineno
-    func = tb.tb_frame.f_code.co_name
-
-    # Полный traceback для лога в консоль
-    full_tb = "".join(traceback.format_exception(type(e), e, e.__traceback__))
-    print(full_tb)
-
-    return f"{str(e)} | In_file: {filename}, line {lineno}, in {func}"
-
-
 def server_run():
-    print(f"UDP server running with port {rSrv.serverRecvPort}")
     init_params(state)  # Связываем apply_params с глобальным state
+
+    # Инициализация сервера
     rSrv.tStart = time.time()
     rSrv.server_info = socket.getaddrinfo(
         "localhost", rSrv.serverRecvPort, socket.AF_UNSPEC, socket.SOCK_DGRAM
@@ -138,7 +114,7 @@ def server_run():
 
             # Обработка ошибок
             except Exception as e:
-                rSrv.lastErr = _format_error(e)
+                rSrv.lastErr = format_error(e)
                 print(f"\n{rSrv.lastErr}")
                 rSrv.send(rSrv.lastErr)
 

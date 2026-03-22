@@ -20,6 +20,8 @@ class RSrv:
         self.lastErr = ""
         self.tStart: float
 
+        print(f"UDP server running with port {self.serverRecvPort}")
+
     def log(
         self,
     ):
