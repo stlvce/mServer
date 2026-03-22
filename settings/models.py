@@ -23,6 +23,13 @@ class Rs:
     Wnd: int = 0
     Focus: int = 0
     Logi: int = 0
+    Lambda: float = 0.0  # средняя длина волны, м
+    rx: list = field(
+        default_factory=lambda: [0.2, -0.2, 0.0, 0.0]
+    )  # позиции ФЦ АС РЛС по x
+    rz: list = field(
+        default_factory=lambda: [0.0, 0.0, 0.2, -0.2]
+    )  # позиции ФЦ АС РЛС по z
 
 
 @dataclass
@@ -52,6 +59,39 @@ class Mi:
     a: np.ndarray = field(default_factory=lambda: np.array([1, 1, 1, 1], dtype=float))
     # Относительные мощности излучателей (результат расчёта)
     Pi: np.ndarray = field(default_factory=lambda: np.array([1, 1, 1, 1], dtype=float))
+    # Геометрия антенн МИ (заполняются в get_mixyz)
+    sx: np.ndarray = field(
+        default_factory=lambda: np.array([])
+    )  # центральные позиции по X
+    sz: np.ndarray = field(
+        default_factory=lambda: np.array([])
+    )  # центральные позиции по Z
+    Mx: np.ndarray = field(
+        default_factory=lambda: np.array([])
+    )  # координаты антенн по X (м)
+    Mz: np.ndarray = field(
+        default_factory=lambda: np.array([])
+    )  # координаты антенн по Z (м)
+    My: np.ndarray = field(
+        default_factory=lambda: np.array([])
+    )  # координаты антенн по Y (м)
+    Ax: np.ndarray = field(
+        default_factory=lambda: np.array([])
+    )  # угловые координаты по X (рад)
+    Az: np.ndarray = field(
+        default_factory=lambda: np.array([])
+    )  # угловые координаты по Z (рад)
+    Rt: np.ndarray = field(
+        default_factory=lambda: np.array([])
+    )  # расстояния до антенн (м)
+    Dists: np.ndarray = field(
+        default_factory=lambda: np.array([])
+    )  # расстояния до центра АС РЛС
+    Diffs: np.ndarray = field(
+        default_factory=lambda: np.array([])
+    )  # для расчёта выравнивающих кабелей
+    dDist: float = 0.0  # максимальная разница расстояний
+    Ants: int = 0  # счётчик — кол-во антенных элементов МИ
 
 
 @dataclass

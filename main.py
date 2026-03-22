@@ -63,16 +63,7 @@ def server_run():
                 apply_params(vars_list)
 
                 if "Get_MiXyZ" in commands:
-                    get_mixyz(
-                        Nmax=state.Mi.Nmax,
-                        Rs=state.Mi.Rs,
-                        Rz=state.Mi.Rz,
-                        Ry=state.Mi.Ry,
-                        Zmax=state.Mi.Zmax,
-                        Ymax=state.Mi.Ymax,
-                        figext=state.test.figext,
-                        result_path="resultFig1.bmp",
-                    )
+                    get_mixyz()
                     rSrv.send("Ok. Get_MiXyZ called")
 
                 # Шаг: Траект. Цель

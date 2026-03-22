@@ -18,9 +18,8 @@ from .do_sint_scan import (
 from .get_relief import get_relief
 from .get_sea import get_sea
 from .get_traekt import get_traekt
-from .set_mi_param import calculate_relative_powers
 from .show_relief import show_relief
-from .get_mixyz import get_mixyz
+from .get_mixyz.get_mixyz import get_mixyz
 from .get_surface import calc_surface
 from .do_sign_mod import do_sign_mod
 from .do_step import do_step
@@ -40,7 +39,6 @@ __all__ = [
     "get_relief",
     "get_sea",
     "get_traekt",
-    "calculate_relative_powers",
     "show_relief",
     "get_mixyz",
     "calc_surface",
