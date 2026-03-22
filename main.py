@@ -3,7 +3,6 @@ import time
 
 from settings.server import rSrv, ans
 from state import state
-from helpers import send_message, print_log
 from helpers.params import apply_params, init_params
 from scripts import get_traekt, get_mixyz, do_sign_mod, calc_surface, do_step
 
@@ -44,14 +43,15 @@ def server_run():
     rSrv.u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     rSrv.u.bind((rSrv.serverIp, rSrv.serverRecvPort))
     rSrv.u.settimeout(1.0)
-    send_message(f"Hello from python mServer {ans}")
+    rSrv.send(f"Hello from python mServer {ans}")
 
     try:
         while rSrv.cmd != "exit":
             try:
                 data = rSrv.u.recvfrom(4096)
                 rSrv.cmd = data[0].decode()
-                print_log(rSrv.cmd, data[1])
+                rSrv.from_address = data[1]
+                rSrv.log()
 
                 vars_list = []
                 commands = []
@@ -73,12 +73,12 @@ def server_run():
                     ans_str = str(ans)
                     if len(ans_str) > 8000:
                         ans_str = ans_str[:8000] + " ..."
-                    send_message(f"Ok. ans={ans_str}")
+                    rSrv.send(f"Ok. ans={ans_str}")
                     continue
 
                 # Отправка времени работы сервера
                 if "server time" in commands:
-                    send_message(
+                    rSrv.send(
                         f"Ok. Server uptime - {round(time.time() - rSrv.tStart)} s"
                     )
                     continue
@@ -97,7 +97,7 @@ def server_run():
                         figext=state.test.figext,
                         result_path="resultFig1.bmp",
                     )
-                    send_message("Ok. Get_MiXyZ called")
+                    rSrv.send("Ok. Get_MiXyZ called")
 
                 # Шаг: Траект. Цель
                 if "Get_Traekt" in commands:
@@ -114,23 +114,23 @@ def server_run():
                         St_Ys=int(state.Tr.Ya),
                         St_Zs=int(state.Tr.Za),
                     )
-                    send_message("Ok. Get_Traekt called")
+                    rSrv.send("Ok. Get_Traekt called")
 
                 # Шаг: Фон
                 if "Get_Surface" in commands:
                     cMass = calc_surface()
                     print(cMass)
-                    send_message("Ok. Get_Surface called")
+                    rSrv.send("Ok. Get_Surface called")
 
                 # Шаг: Предрасчет
                 if "Do_SignMod" in commands:
                     do_sign_mod()
-                    send_message("Ok. Do_SignMod called")
+                    rSrv.send("Ok. Do_SignMod called")
 
                 # Шаг: ПНМ
                 if "Do_Step" in commands:
                     do_step()
-                    send_message("Ok. Do_Step called")
+                    rSrv.send("Ok. Do_Step called")
 
             # Ждём следующей итерации
             except socket.timeout:
@@ -140,7 +140,7 @@ def server_run():
             except Exception as e:
                 rSrv.lastErr = _format_error(e)
                 print(f"\n{rSrv.lastErr}")
-                send_message(rSrv.lastErr)
+                rSrv.send(rSrv.lastErr)
 
     # Обработка остановки сервера при Ctrl+C
     except KeyboardInterrupt:
@@ -148,7 +148,7 @@ def server_run():
 
     # Отключение сервера при KeyboardInterrupt и команды "exit"
     finally:
-        send_message("Ok. UDP server is down")
+        rSrv.send("Ok. UDP server is down")
         rSrv.u.close()
 
 
