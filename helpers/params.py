@@ -106,7 +106,12 @@ def _set_value(key: str, value):
             return
         setattr(obj, attr, _cast_by_field(obj, attr, value))
     elif len(parts) == 1:
-        setattr(_state, key, value)
+        # Используем APP_STATE_TYPES для приведения типов верхнего уровня
+        from state import APP_STATE_TYPES
+
+        typ = APP_STATE_TYPES.get(key)
+        typed_value = _cast(value, typ) if typ else value
+        setattr(_state, key, typed_value)
     else:
         print(f"[WARN] Не удалось применить ключ: {key}")
 

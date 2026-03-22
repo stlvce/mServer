@@ -5,7 +5,33 @@ from settings.server import rSrv, ans
 from state import state
 from helpers import send_message, print_log
 from helpers.params import apply_params, init_params
-from scripts import get_traekt, get_mixyz, do_sign_mod, calc_surface
+from scripts import get_traekt, get_mixyz, do_sign_mod, calc_surface, do_step
+
+
+def _format_error(e: Exception) -> str:
+    """
+    Возвращает сообщение об ошибке с указанием файла и строки
+    где исключение реально возникло (последний фрейм traceback).
+    """
+    import traceback
+
+    tb = e.__traceback__
+    if tb is None:
+        return str(e)
+
+    # Идём до последнего фрейма в цепочке
+    while tb.tb_next is not None:
+        tb = tb.tb_next
+
+    filename = tb.tb_frame.f_code.co_filename
+    lineno = tb.tb_lineno
+    func = tb.tb_frame.f_code.co_name
+
+    # Полный traceback для лога в консоль
+    full_tb = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+    print(full_tb)
+
+    return f"{str(e)} | In_file: {filename}, line {lineno}, in {func}"
 
 
 def server_run():
@@ -92,17 +118,18 @@ def server_run():
 
                 # Шаг: Фон
                 if "Get_Surface" in commands:
-                    cMass = calc_surface(state)
+                    cMass = calc_surface()
                     print(cMass)
                     send_message("Ok. Get_Surface called")
 
                 # Шаг: Предрасчет
                 if "Do_SignMod" in commands:
-                    do_sign_mod(state)
+                    do_sign_mod()
                     send_message("Ok. Do_SignMod called")
 
                 # Шаг: ПНМ
                 if "Do_Step" in commands:
+                    do_step()
                     send_message("Ok. Do_Step called")
 
             # Ждём следующей итерации
@@ -111,14 +138,7 @@ def server_run():
 
             # Обработка ошибок
             except Exception as e:
-                if e.__traceback__ is not None:
-                    rSrv.lastErr = (
-                        f"{str(e)} In_file: "
-                        f"{e.__traceback__.tb_frame.f_code.co_filename}, "
-                        f"line {e.__traceback__.tb_lineno}"
-                    )
-                else:
-                    rSrv.lastErr = str(e)
+                rSrv.lastErr = _format_error(e)
                 print(f"\n{rSrv.lastErr}")
                 send_message(rSrv.lastErr)
 

@@ -5,7 +5,7 @@ from PIL import Image
 import io
 import sys
 
-from state import AppState
+from state import state
 
 _WIN32_CLIPBOARD_AVAILABLE = False
 try:
@@ -99,7 +99,7 @@ def send_image_to_clipboard(image: Image.Image):
     return True
 
 
-def calc_surface(state: AppState):
+def calc_surface():
     """
     Пересчёт подстилающей поверхности и построение сцены.
     """
@@ -130,9 +130,11 @@ def calc_surface(state: AppState):
     # Построение графика
     fig = plt.figure(figsize=(6, 6), dpi=100)
     ax: Axes3D = fig.add_subplot(111, projection="3d")
-    ax.plot3D(Tr.Pos[:, 0], Tr.Pos[:, 2], Tr.Pos[:, 1], "-xm", label="Траектория")
 
-    if St.N > 0:
+    if Tr.Pos.ndim == 2 and Tr.Pos.shape[0] > 0:
+        ax.plot3D(Tr.Pos[:, 0], Tr.Pos[:, 2], Tr.Pos[:, 1], "-xm", label="Траектория")
+
+    if St.N > 0 and St.Pos.ndim == 3 and St.Pos.shape[2] >= St.N:
         for n in range(St.N):
             print(
                 St.Pos[:, 0, n],

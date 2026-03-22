@@ -2,6 +2,43 @@ import numpy as np
 from settings.models import Rs, Mi, Tr, St, test, Sf, Sea
 
 
+# Типы полей верхнего уровня AppState — используются в apply_params для кастинга
+APP_STATE_TYPES: dict = {
+    "t": int,
+    "H": float,
+    "Step": int,
+    "Type": int,
+    "FacetN": int,
+    "Ncr": int,
+    "Ym": int,
+    "Sqw": int,
+    "ChannelN": int,
+    "DNA1n": int,
+    "DNA2n": int,
+    "f0n": float,
+    "AnglX_Prmn": int,
+    "AnglZ_Prmn": int,
+    "AnglX_Prdn": int,
+    "AnglZ_Prdn": int,
+    "dH1": int,
+    "Kr1": int,
+    "DOR1": int,
+    "dH2": int,
+    "Kr2": int,
+    "DOR2": int,
+    "dH7": int,
+    "Kr7": int,
+    "DOR7": int,
+    "dH8": int,
+    "Kr8": int,
+    "DOR8": int,
+    "vidDNA": str,
+    "vidDOR1": str,
+    "vidDOR2": str,
+    "vidDOR7": str,
+}
+
+
 class AppState:
     def __init__(self):
         # --- Вложенные объекты ---

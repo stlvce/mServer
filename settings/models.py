@@ -39,8 +39,19 @@ class Mi:
     Ymax: int = 0
     Zmax: int = 0
     Nmax: int = 0
-    dnay: int = 0
-    dnaz: int = 0
+    dnay: int = 0  # ширина ДНА по оси y, градусы
+    dnaz: int = 0  # ширина ДНА по оси x, градусы
+    # Координаты излучателей МИ (заполняются в calc_mi_power)
+    Z: np.ndarray = field(
+        default_factory=lambda: np.array([50, -50, 0, 0], dtype=float)
+    )
+    Y: np.ndarray = field(
+        default_factory=lambda: np.array([0, 0, 50, -50], dtype=float)
+    )
+    # Весовые коэффициенты излучателей (1 — включён, 0 — выключен)
+    a: np.ndarray = field(default_factory=lambda: np.array([1, 1, 1, 1], dtype=float))
+    # Относительные мощности излучателей (результат расчёта)
+    Pi: np.ndarray = field(default_factory=lambda: np.array([1, 1, 1, 1], dtype=float))
 
 
 @dataclass
@@ -54,7 +65,7 @@ class Tr:
     tang: float = 30.0
     kren: float = 0.0
     psi: float = 0.0
-    Pos: np.ndarray = field(default_factory=lambda: np.array([]))
+    Pos: np.ndarray = field(default_factory=lambda: np.zeros((1, 3)))
     Ang: object = None
 
 
@@ -76,7 +87,7 @@ class St:
     Xs: float = 0.0
     Ys: float = 0.0
     Zs: float = 0.0
-    Pos: np.ndarray = field(default_factory=lambda: np.array([]))
+    Pos: np.ndarray = field(default_factory=lambda: np.zeros((1, 3, 1)))
 
 
 @dataclass

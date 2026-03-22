@@ -23,6 +23,7 @@ from .show_relief import show_relief
 from .get_mixyz import get_mixyz
 from .get_surface import calc_surface
 from .do_sign_mod import do_sign_mod
+from .do_step import do_step
 
 __all__ = [
     "process_fm_radar",
@@ -44,4 +45,5 @@ __all__ = [
     "get_mixyz",
     "calc_surface",
     "do_sign_mod",
+    "do_step",
 ]

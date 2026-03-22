@@ -5,11 +5,12 @@ from PIL import Image
 import platform
 from .do_sign_imp import do_sign_imp
 from .do_sign_fm import do_sign_fm
-from typing import Any
+
+from state import state
 
 
-def do_sign_mod(globals: dict[str, Any] | None = None):
-    Ym = globals["Ym"]
+def do_sign_mod():
+    Ym = state.Ym
 
     try:
         if Ym == 0:
