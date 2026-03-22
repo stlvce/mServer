@@ -68,19 +68,7 @@ def server_run():
 
                 # Шаг: Траект. Цель
                 if "Get_Traekt" in commands:
-                    get_traekt(
-                        Nimp=int(state.Rs.Nimp),
-                        Xa=int(state.Tr.Xa),
-                        Ya=int(state.Tr.Ya),
-                        Za=int(state.Tr.Za),
-                        Vx=int(state.Tr.Vx),
-                        Vy=int(state.Tr.Vy),
-                        Vz=int(state.Tr.Vz),
-                        St_N=int(state.St.N),
-                        St_Xs=int(state.Tr.Xa) + 20,
-                        St_Ys=int(state.Tr.Ya),
-                        St_Zs=int(state.Tr.Za),
-                    )
+                    get_traekt()
                     rSrv.send("Ok. Get_Traekt called")
 
                 # Шаг: Фон

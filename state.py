@@ -143,7 +143,20 @@ def evs(source: str):
     # Заменяем все 'Obj.attr' на их значения
     resolved = re.sub(r"[A-Z][a-zA-Z]*\.[a-zA-Z]+", replace_attr, source)
 
+    # Также заменяем одиночные переменные state верхнего уровня (ns, ms, c и т.д.)
+    def replace_scalar(match):
+        name = match.group(0)
+        val = getattr(state, name, None)
+        if val is not None and isinstance(val, (int, float)):
+            return str(val)
+        return name
+
+    resolved = re.sub(r"\b([a-z_][a-zA-Z0-9_]*)\b", replace_scalar, resolved)
+
+    # Контекст для eval: все числовые константы из state
+    ctx = {k: v for k, v in vars(state).items() if isinstance(v, (int, float))}
+
     try:
-        return eval(resolved)
+        return eval(resolved, {"__builtins__": {}}, ctx)
     except Exception:
         return resolved

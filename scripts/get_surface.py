@@ -136,16 +136,11 @@ def calc_surface():
 
     if St.N > 0 and St.Pos.ndim == 3 and St.Pos.shape[2] >= St.N:
         for n in range(St.N):
-            print(
-                St.Pos[:, 0, n],
-                St.Pos[:, 2, n],
-                St.Pos[:, 1, n],
-                np.array([1, 1, 1]),
-            )
+            n_pts = St.Pos.shape[0]  # длина траектории
             ax.plot3D(
                 St.Pos[:, 0, n],
                 St.Pos[:, 2, n],
-                [100, 100, 100],
+                np.full(n_pts, 100.0),  # константная высота той же длины
                 "-dr",
                 label=f"Локатор {n + 1}",
             )

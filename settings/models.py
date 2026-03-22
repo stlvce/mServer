@@ -24,6 +24,8 @@ class Rs:
     Focus: int = 0
     Logi: int = 0
     Lambda: float = 0.0  # средняя длина волны, м
+    Tm: float = 1e-2  # период модуляции/повторения импульсов
+    dR: float = 0.0  # шаг по дальности
     rx: list = field(
         default_factory=lambda: [0.2, -0.2, 0.0, 0.0]
     )  # позиции ФЦ АС РЛС по x
@@ -107,6 +109,22 @@ class Tr:
     psi: float = 0.0
     Pos: np.ndarray = field(default_factory=lambda: np.zeros((1, 3)))
     Ang: object = None
+    # Поля заполняются в get_traekt
+    H1: float = 0.0  # начальная высота
+    N: int = 0  # фактическая длина траектории
+    t: np.ndarray = field(default_factory=lambda: np.array([]))
+    V: np.ndarray = field(default_factory=lambda: np.zeros((1, 3)))
+    Tm: np.ndarray = field(default_factory=lambda: np.array([]))
+    Ti: np.ndarray = field(default_factory=lambda: np.array([]))
+    Tm_Ni: np.ndarray = field(default_factory=lambda: np.array([]))
+    Tm_i: np.ndarray = field(default_factory=lambda: np.array([]))
+    TiT: np.ndarray = field(default_factory=lambda: np.array([]))
+    TiR: np.ndarray = field(default_factory=lambda: np.array([]))
+    Pz: np.ndarray = field(default_factory=lambda: np.array([]))
+    Lx: list = field(default_factory=lambda: [0.0, 0.0])
+    Lz: list = field(default_factory=lambda: [0.0, 0.0])
+    Lh: list = field(default_factory=lambda: [0.0, 0.0])
+    dR: float = 0.0  # шаг по дальности
 
 
 @dataclass
@@ -128,6 +146,8 @@ class St:
     Ys: float = 0.0
     Zs: float = 0.0
     Pos: np.ndarray = field(default_factory=lambda: np.zeros((1, 3, 1)))
+    # Поля заполняются в get_traekt
+    V: np.ndarray = field(default_factory=lambda: np.zeros((1, 3, 1)))
 
 
 @dataclass

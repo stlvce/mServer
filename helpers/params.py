@@ -235,9 +235,11 @@ def _cast(value, typ):
 
 def _parse_scalar(value: str):
     """Автоопределение типа: int -> float -> str."""
+    # Убираем скобки из значения: (0) -> 0, (1.5) -> 1.5
+    clean = value.strip().strip("()")
     for typ in (int, float):
         try:
-            return typ(value)
+            return typ(clean)
         except (ValueError, TypeError):
             pass
-    return value
+    return clean
