@@ -88,6 +88,7 @@ class AppState:
         self.DNA1n: int = 0
         self.DNA2n: int = 0
         self.f0n: float = 0.0
+        self.f0: list[float] = [4.3e9, 4.3e9]
         self.AnglX_Prmn: int = 0
         self.AnglZ_Prmn: int = 0
         self.AnglX_Prdn: int = 0
@@ -112,6 +113,12 @@ class AppState:
 
         # --- Прочее ---
         self.Mark: set = {"kx", "bo", "g+", "md", "c^", "yo", "ms", "g*", "vr"}
+
+        self.tmpa = None
+        self.tmpd = None
+
+        self.AlfaX: float = 0.0
+        self.AlfaZ: float = 0.0
 
 
 # Глобальный синглтон — импортируется везде

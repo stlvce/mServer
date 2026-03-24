@@ -26,10 +26,10 @@ class Rs:
     Lambda: float = 0.0  # средняя длина волны, м
     Tm: float = 1e-2  # период модуляции/повторения импульсов
     dR: float = 0.0  # шаг по дальности
-    rx: list = field(
+    x: list = field(
         default_factory=lambda: [0.2, -0.2, 0.0, 0.0]
     )  # позиции ФЦ АС РЛС по x
-    rz: list = field(
+    z: list = field(
         default_factory=lambda: [0.0, 0.0, 0.2, -0.2]
     )  # позиции ФЦ АС РЛС по z
 

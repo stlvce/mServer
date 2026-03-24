@@ -15,12 +15,12 @@ def get_mixyz():
     Результаты записываются напрямую в state.state.Mi.
     График копируется в буфер обмена (Windows).
     """
-    # Установка общих параметров РВС/РЛС
-    set_rv_param()
-    # Установка параметров-настройки МИ (расчёт мощностей)
-    set_mi_param()
 
-    sx = [
+    set_rv_param()  # Установка общих параметров РВС/РЛС
+    set_mi_param()  # Установка параметров-настройки МИ (расчёт мощностей)
+
+    # центральные позиции
+    state.Mi.sx = [
         0,
         1,
         1,
@@ -143,8 +143,7 @@ def get_mixyz():
         10,
         0,
     ]
-
-    sz = [
+    state.Mi.sz = [
         0,
         1,
         -1,
@@ -270,25 +269,26 @@ def get_mixyz():
 
     # Если Nmax не задан — вычисляем из размера sx
     if state.Mi.Nmax == 0:
-        state.Mi.Nmax = len(sx) * 4
+        state.Mi.Nmax = len(state.Mi.sx) * 4
+
+    # Количество групп по 4 элемента (не выходим за пределы sx/sz)
+    sn = min((state.Mi.Nmax + 3) // 4, len(state.Mi.sx))
+
+    state.Mi.Ants = 0  # счётчик — кол-во антенных элементов МИ
 
     # Подготовим чистые массивы координат антенн МИ
-    state.Mi.Ax = np.zeros(state.Mi.Nmax, dtype=float)
-    state.Mi.Az = np.zeros(state.Mi.Nmax, dtype=float)
     state.Mi.Mx = np.zeros(state.Mi.Nmax, dtype=float)
     state.Mi.Mz = np.zeros(state.Mi.Nmax, dtype=float)
+    state.Mi.Ax = np.zeros(state.Mi.Nmax, dtype=float)
+    state.Mi.Az = np.zeros(state.Mi.Nmax, dtype=float)
     state.Mi.Rt = np.zeros(state.Mi.Nmax, dtype=float)
     state.Mi.My = np.zeros(state.Mi.Nmax, dtype=float)
 
     # Угловые апертуры по осям
-    AlfaX = math.atan(state.Mi.Rz / 2.0 / state.Mi.Rs)
-    AlfaZ = math.atan(state.Mi.Ry / 2.0 / state.Mi.Rs)
+    state.AlfaX = math.atan(state.Mi.Rz / 2.0 / state.Mi.Rs)
+    state.AlfaZ = math.atan(state.Mi.Ry / 2.0 / state.Mi.Rs)
 
-    # Количество групп по 4 элемента (не выходим за пределы sx/sz)
-    sn = min((state.Mi.Nmax + 3) // 4, len(sx))
-
-    state.Mi.Ants = 0  # счётчик — кол-во антенных элементов МИ
-
+    # TODO поменять логику отрисовку этого графика
     # Настройка рисунка
     fig = plt.figure(figsize=(6, 6), dpi=100)
     ax = fig.add_subplot(111, projection="3d")
@@ -304,13 +304,14 @@ def get_mixyz():
             break
 
         # --- 2 горизонтальных элемента ---
-        state.Mi.Ax[base + 0] = AlfaX * (sx[k] + 0.5)
+        state.Mi.Ax[base + 0] = state.AlfaX * (state.Mi.sx[k] + 0.5)
         state.Mi.Mx[base + 0] = math.tan(state.Mi.Ax[base + 0]) * state.Mi.Rs * 2.0
-        state.Mi.Az[base + 0] = AlfaZ * sz[k]
+        state.Mi.Az[base + 0] = state.AlfaZ * state.Mi.sz[k]
         state.Mi.Mz[base + 0] = math.tan(state.Mi.Az[base + 0]) * state.Mi.Rs * 2.0
-        state.Mi.Ax[base + 1] = AlfaX * (sx[k] - 0.5)
+
+        state.Mi.Ax[base + 1] = state.AlfaX * (state.Mi.sx[k] - 0.5)
         state.Mi.Mx[base + 1] = math.tan(state.Mi.Ax[base + 1]) * state.Mi.Rs * 2.0
-        state.Mi.Az[base + 1] = AlfaZ * sz[k]
+        state.Mi.Az[base + 1] = state.AlfaZ * state.Mi.sz[k]
         state.Mi.Mz[base + 1] = math.tan(state.Mi.Az[base + 1]) * state.Mi.Rs * 2.0
 
         # Проверка выхода за границы апертуры
@@ -322,6 +323,7 @@ def get_mixyz():
         ):
             state.Mi.Mx[base + 0] = state.Mi.Mz[base + 0] = 0.0
             state.Mi.Mx[base + 1] = state.Mi.Mz[base + 1] = 0.0
+
             continue
 
         state.Mi.Rt[base + 0] = math.sqrt(
@@ -334,13 +336,14 @@ def get_mixyz():
 
         # --- 2 вертикальных элемента (если есть место) ---
         if base + 3 < state.Mi.Nmax:
-            state.Mi.Ax[base + 2] = AlfaX * sx[k]
+            state.Mi.Ax[base + 2] = state.AlfaX * state.Mi.sx[k]
             state.Mi.Mx[base + 2] = math.tan(state.Mi.Ax[base + 2]) * state.Mi.Rs * 2.0
-            state.Mi.Az[base + 2] = AlfaZ * (sz[k] + 0.5)
+            state.Mi.Az[base + 2] = state.AlfaZ * (state.Mi.sz[k] + 0.5)
             state.Mi.Mz[base + 2] = math.tan(state.Mi.Az[base + 2]) * state.Mi.Rs * 2.0
-            state.Mi.Ax[base + 3] = AlfaX * sx[k]
+
+            state.Mi.Ax[base + 3] = state.AlfaX * state.Mi.sx[k]
             state.Mi.Mx[base + 3] = math.tan(state.Mi.Ax[base + 3]) * state.Mi.Rs * 2.0
-            state.Mi.Az[base + 3] = AlfaZ * (sz[k] - 0.5)
+            state.Mi.Az[base + 3] = state.AlfaZ * (state.Mi.sz[k] - 0.5)
             state.Mi.Mz[base + 3] = math.tan(state.Mi.Az[base + 3]) * state.Mi.Rs * 2.0
 
             # Проверка выхода за границы апертуры (зануляем все 4 слота как в оригинале)
@@ -364,6 +367,7 @@ def get_mixyz():
             )
             state.Mi.Ants += 2  # счётчик — кол-во антенных элементов МИ
 
+        print("TUTU", state.test.figext)
         # --- Отрисовка согласно test.figext ---
         if state.test.figext > 0:
             # Позиции 2-х горизонтальных ЭлАс МИ
@@ -385,9 +389,9 @@ def get_mixyz():
         if state.test.figext >= 0:
             # Центральная точка группы из 4-х ЭлАс МИ
             ax.scatter(
-                [sx[k] * state.Mi.Rz],
+                [state.Mi.sx[k] * state.Mi.Rz],
                 [state.Mi.Rs],
-                [sz[k] * state.Mi.Ry],
+                [state.Mi.sz[k] * state.Mi.Ry],
                 marker="D",
                 color="k",
             )
@@ -429,7 +433,7 @@ def get_mixyz():
         pass
 
     print(
-        f"Angles of first elements have AlfaX={AlfaX / math.pi * 180 * 2:.6g}, AlfaZ={AlfaZ / math.pi * 180 * 2:.6g}"
+        f"Angles of first elements have AlfaX={state.AlfaX / math.pi * 180 * 2:.6g}, AlfaZ={state.AlfaZ / math.pi * 180 * 2:.6g}"
     )
 
     # ==== Сохраняем график в файл resultFig1.bmp ====

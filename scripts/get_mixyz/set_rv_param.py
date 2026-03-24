@@ -11,19 +11,19 @@ def set_rv_param():
     # Очистим траекторию для корректного старта с обновлёнными параметрами
     import numpy as np
 
+    # очистим траекторию для корректного старта с обновленными параметрами
     state.Tr.Pos = np.zeros((1, 3))
     state.Tr.Ang = None
 
     # Средняя длина волны (пропускаем если f0n не задан)
-    if state.f0n != 0:
-        state.Rs.Lambda = state.c / state.f0n
+    if state.f0[1] != 0:
+        state.Rs.Lambda = state.c / state.f0[1]
 
     # Позиции приёмных ФЦ АС РЛС, для графиков
-    state.Rs.rx = [1, -1, 0, 0]  # по оси x (было Rs.x)
-    state.Rs.rz = [0, 0, 1, -1]  # по оси z (было Rs.z)
-    # Делим на 5 как в оригинале
-    state.Rs.rx = [v / 5 for v in state.Rs.rx]
-    state.Rs.rz = [v / 5 for v in state.Rs.rz]
+    state.Rs.x = [1, -1, 0, 0]  # по оси x
+    state.Rs.z = [0, 0, 1, -1]  # по оси z
+    state.Rs.x = [v / 5 for v in state.Rs.x]
+    state.Rs.z = [v / 5 for v in state.Rs.z]
 
     # Доп. спец параметры зондирующего сигнала и СВЧ тракта
     if state.Ym > 0:

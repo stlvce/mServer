@@ -18,11 +18,20 @@ def set_mi_param():
 
         # Mi.z=25; Mi.y=25; # строка только для отладки
 
-        tmpa = np.abs(state.Mi.Z + state.Mi.Y - state.Mi.z - state.Mi.y) / np.sqrt(2)
-        tmpd = np.sqrt((state.Mi.Z - state.Mi.z) ** 2 + (state.Mi.Y - state.Mi.y) ** 2)
+        state.tmpa = np.abs(
+            state.Mi.Z + state.Mi.Y - state.Mi.z - state.Mi.y
+        ) / np.sqrt(2)
+        state.tmpd = np.sqrt(
+            (state.Mi.Z - state.Mi.z) ** 2 + (state.Mi.Y - state.Mi.y) ** 2
+        )
 
         # Расчёт относительных мощностей
-        state.Mi.Pi = state.Mi.a * tmpa * np.sqrt(np.maximum(tmpd**2 - tmpa**2, 0)) / 50
+        state.Mi.Pi = (
+            state.Mi.a
+            * state.tmpa
+            * np.sqrt(np.maximum(state.tmpd**2 - state.tmpa**2, 0))
+            / 50
+        )
 
     except Exception:
         # Доопределяем параметры на случай 1-го запуска до определения всех параметров
