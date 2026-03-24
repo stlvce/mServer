@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 import platform
-from .do_sign_imp import do_sign_imp
-from .do_sign_fm import do_sign_fm
+from scripts.do_sign_imp import do_sign_imp
+from scripts.do_sign_fm import do_sign_fm
 
 from state import state
 
