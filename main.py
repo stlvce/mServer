@@ -62,6 +62,10 @@ def server_run():
                 # Применяем параметры через безопасный apply_params
                 apply_params(vars_list)
 
+                # Скрыто, при запуске сервера все константы сами ставятся
+                # if "Set_Consts" in commands:
+                #     rSrv.send("Ok. Set_Consts called")
+
                 if "Get_MiXyZ" in commands:
                     get_mixyz()
                     rSrv.send("Ok. Get_MiXyZ called")

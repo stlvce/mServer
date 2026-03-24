@@ -151,7 +151,53 @@ class St:
 
 
 @dataclass
+class consts:
+    # tStart: float = 0.0
+    g: float = 9.80665  # g, m/s^2
+    delta: float = 1e-6  # дельта погрешности округлений мл. разрядов
+    Pi2 = np.pi * 2  # для сокращения числа умножений
+    Pi4 = np.pi * 4
+    Pi4p3 = (np.pi * 4) ** 3
+    # X3: list = [1, 0, 0] # Евклидово пространство
+    # Y3: list = [0, 1, 0]
+    # Z3: list = [0, 0, 1]
+    # X2: list = [1, 0] # Евклидово пространство
+    # Y2: list = [0, 1]
+    # Доп. константы
+    # interpF: int = 1 # понизить частоту в целое число раз для повышения скорости расчета
+    # Grid: float = 0.02 # шаг сетки X,Z, нормированный к высоте
+
+
+@dataclass
 class test:
+    cycleN: int = 0  # число рассчитанных шагов (для циклического выполнения)
+    n_figs: int = 7  # допустимое число фигур для данной версии ПО модели
+    h: list[int] = field(
+        default_factory=lambda: [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ]
+    )  # создадим пока пустой массив указателей на фигуры
+    scrsz: list[int] = field(
+        default_factory=lambda: [1, 1, 1680, 1050]
+    )  # ScreenSize is a four-element vector: [left, bottom, width, height]
+
+    # cash_Enabled: int = 0 # для повторяемости результатов и ускорения запусков модели
+    # mem_i: int = -1 # для хранения процента/10 вычислений в цикле по шагам траектории
+    fpos: list[int] = field(
+        default_factory=lambda: [1, 1, 576, 512]
+    )  # базовое положение+размер окон-фигур (х,y_лев.нижний угол, ширина, высота)
+    fstep: list[int] = field(
+        default_factory=lambda: [100, 24]
+    )  # шаг=автосмещение фигур по x,y
+
+    # Меняющиеся параметры
     figext: int = 0
     Xcr: float = 0.0
     Zcr: float = 0.0
@@ -159,14 +205,6 @@ class test:
     SWT: int = 0
     pF: int = 0
     pN: int = 0
-    cycleN: int = 0
-    n_figs: int = 7
-    hn_figs: int = 0
-    scrsz: int = 0
-    cash_Enabled: int = 0
-    mem_i: int = -1
-    fpos: list = field(default_factory=lambda: [1, 1, 576, 512])
-    fstep: list = field(default_factory=lambda: [100, 24])
 
 
 @dataclass
@@ -189,37 +227,38 @@ class Sf:
     z_size: int = 0
     med_shift: float = 0.0
     n: int = 0
+    # Константы для автопостроения
     Color: list = field(
         default_factory=lambda: [
-            10,
+            10,  # грунт +
             0.412,
             0.267,
             0.141,
-            20,
+            20,  # вода +
             0.678,
             0.922,
             1.0,
-            30,
+            30,  # луг/трава +
             0.467,
             0.675,
             0.188,
-            40,
+            40,  # лес +
             0.231,
             0.443,
             0.337,
-            50,
+            50,  # снег/скалы +
             0.8,
             0.8,
             0.8,
-            60,
+            60,  # песок/солончак +
             0.929,
             0.694,
             0.125,
-            70,
+            70,  # дорога/город +
             0.392,
             0.475,
             0.635,
-            80,
+            80,  # кустарник/прочее +
             0.871,
             0.49,
             0.0,
@@ -227,14 +266,14 @@ class Sf:
     )
     Color_name: dict = field(
         default_factory=lambda: {
-            10: "ground",
-            20: "water",
-            30: "meadow",
-            40: "forest",
-            50: "snow",
-            60: "sand",
-            70: "road",
-            80: "bushes",
+            10: "ground",  # грунт
+            20: "water",  # вода
+            30: "meadow",  # луг/трава
+            40: "forest",  # лес
+            50: "snow",  # снег/скалы
+            60: "sand",  # песок
+            70: "road",  # дорога/город
+            80: "bushes",  # кустарник/прочее
         }
     )
 

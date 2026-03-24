@@ -1,5 +1,5 @@
 import numpy as np
-from settings.models import Rs, Mi, Tr, St, test, Sf, Sea
+from settings.models import consts, Rs, Mi, Tr, St, test, Sf, Sea
 
 
 # Типы полей верхнего уровня AppState — используются в apply_params для кастинга
@@ -42,6 +42,7 @@ APP_STATE_TYPES: dict = {
 class AppState:
     def __init__(self):
         # --- Вложенные объекты ---
+        self.consts = consts()  # Константы
         self.Rs = Rs()
         self.Mi = Mi()
         self.Tr = Tr()
@@ -51,7 +52,14 @@ class AppState:
         self.Sea = Sea()
 
         # --- Физические константы (не меняются от клиента) ---
-        self.c: float = 3e8
+        self.c: int = 299792458  # Скорость света, м/с
+        self.mks: float = (
+            1e-6  # мкс - удобно для чтения значений параметров времени t,Tm
+        )
+        self.ms: float = 1e-3  # мс - исп. для перевода мс в мкс
+        self.ns: float = 1e-9  # нс - исп. для перевода нс в мкс
+
+        # Дублируется все в consts
         self.pi: float = 3.14
         self.g: float = 9.80665
         self.delta: float = 1e-6
@@ -59,16 +67,6 @@ class AppState:
         self.Pi2: float = self.pi * 2
         self.Pi4: float = self.pi * 4
         self.Pi4p3: float = self.Pi4**3
-        self.mks: float = 1e-6
-        self.ms: float = 1e-3
-        self.ns: float = 1e-9
-        self.X3: list = [1, 0, 0]
-        self.Y3: list = [0, 1, 0]
-        self.Z3: list = [0, 0, 1]
-        self.X2: list = [1, 0]
-        self.Y2: list = [0, 1]
-        self.interpF: int = 1
-        self.Grid: float = 0.02
 
         # --- Переменные состояния (приходят от клиента) ---
         self.t: int = 0
