@@ -1,5 +1,5 @@
 import numpy as np
-from scripts import calc_surface
+from .get_surface import calc_surface
 
 
 def test_get_surface():

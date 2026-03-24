@@ -1,4 +1,4 @@
-from scripts import process_fm_radar, plot_fm_radar_results, save_fm_radar_results
+from .do_sint_fm import process_fm_radar, plot_fm_radar_results, save_fm_radar_results
 import numpy as np
 
 

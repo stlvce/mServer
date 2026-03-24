@@ -1,5 +1,5 @@
 import numpy as np
-from scripts import (
+from .do_sint_scan import (
     init_radar_image_processor_globals,
     process_radar_image,
     plot_radar_image_results,
