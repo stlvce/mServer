@@ -1,9 +1,9 @@
 import numpy as np
-from .get_surface import calc_surface
+from .get_surface import get_surface
 
 
 def test_get_surface():
-    calc_surface(
+    get_surface(
         50,
         {
             "Pos": np.array([[0, 100, 0], [100, 120, 50], [200, 150, 100]]),

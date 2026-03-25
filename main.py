@@ -5,7 +5,7 @@ from settings.server import rSrv, ans
 from state import state
 from helpers.params import apply_params, init_params
 from helpers.format_error import format_error
-from scripts import get_traekt, get_mixyz, do_sign_mod, calc_surface, do_step
+from scripts import get_traekt, get_mixyz, do_sign_mod, get_surface, do_step
 
 
 def server_run():
@@ -77,7 +77,7 @@ def server_run():
 
                 # Шаг: Фон
                 if "Get_Surface" in commands:
-                    cMass = calc_surface()
+                    cMass = get_surface()
                     print(cMass)
                     rSrv.send("Ok. Get_Surface called")
 

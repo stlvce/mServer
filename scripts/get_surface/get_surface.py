@@ -3,103 +3,15 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
 import io
-import sys
+
 
 from state import state
 
-_WIN32_CLIPBOARD_AVAILABLE = False
-try:
-    import win32clipboard
-    from PIL import ImageGrab
-
-    _WIN32_CLIPBOARD_AVAILABLE = True
-except ImportError:
-    pass
+from .get_forest import get_forest, plot_forest
+from .send_image_to_clipboard import send_image_to_clipboard
 
 
-def gen_forest(
-    n_trees=50,
-    area_size=(200, 200),
-    h_mean=20,
-    h_std=5,
-    r_mean=5,
-    r_std=2,
-    base_height=0,
-):
-    """
-    Генерация леса (Type=4).
-    """
-    x = (np.random.rand(n_trees) - 0.5) * area_size[0]
-    z = (np.random.rand(n_trees) - 0.5) * area_size[1]
-    h = np.abs(np.random.normal(h_mean, h_std, n_trees))
-    r = np.abs(np.random.normal(r_mean, r_std, n_trees))
-
-    y_base = np.full(n_trees, base_height)
-    y_top = base_height + h
-
-    return {
-        "x": x,
-        "z": z,
-        "y_base": y_base,
-        "y_top": y_top,
-        "h": h,
-        "r": r,
-    }
-
-
-def plot_forest(forest, ax):
-    """
-    Визуализация леса (стволы + вершины).
-    """
-    for i in range(len(forest["x"])):
-        # Ствол
-        ax.plot(
-            [forest["x"][i], forest["x"][i]],
-            [forest["z"][i], forest["z"][i]],
-            [forest["y_base"][i], forest["y_top"][i]],
-            c="saddlebrown",
-            linewidth=2,
-        )
-
-        # Крона (верхушка)
-        ax.scatter(
-            forest["x"][i],
-            forest["z"][i],
-            forest["y_top"][i],
-            c="green",
-            s=forest["r"][i] * 20,
-            alpha=0.6,
-        )
-
-
-def send_image_to_clipboard(image: Image.Image):
-    """
-    Копирует PIL Image в системный буфер обмена.
-    Поддерживается только Windows (через pywin32).
-    """
-    if not _WIN32_CLIPBOARD_AVAILABLE:
-        print(
-            "⚠️  Копирование изображения в буфер обмена поддерживается только на Windows (требуется pywin32).",
-            file=sys.stderr,
-        )
-        print("   Установите: pip install pywin32")
-        return False
-
-    output = io.BytesIO()
-    image.convert("RGB").save(output, "BMP")
-    data = output.getvalue()[14:]  # BMP header starts at 14th byte
-    output.close()
-
-    win32clipboard.OpenClipboard()
-    try:
-        win32clipboard.EmptyClipboard()
-        win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-    finally:
-        win32clipboard.CloseClipboard()
-    return True
-
-
-def calc_surface():
+def get_surface():
     """
     Пересчёт подстилающей поверхности и построение сцены.
     """
@@ -151,7 +63,7 @@ def calc_surface():
 
     # Моделирование леса
     if Type == 4:
-        forest = gen_forest(n_trees=100, area_size=(400, 400), base_height=0)
+        forest = get_forest(n_trees=100, area_size=(400, 400), base_height=0)
         plot_forest(forest, ax)
 
     ax.set_xlabel("x [м]")
