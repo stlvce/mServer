@@ -77,8 +77,8 @@ def server_run():
 
                 # Шаг: Фон
                 if "Get_Surface" in commands:
-                    cMass = get_surface()
-                    print(cMass)
+                    state.cMass = get_surface()
+                    print(state.cMass)
                     rSrv.send("Ok. Get_Surface called")
 
                 # Шаг: Предрасчет
