@@ -1,5 +1,5 @@
 import numpy as np
-from scripts import (
+from .do_sint_imp import (
     process_radar_impulse,
     plot_radar_impulse_results,
     init_radar_impulse_processor_globals,

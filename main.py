@@ -2,44 +2,41 @@ import socket
 import time
 
 from settings.server import rSrv, ans
-from settings.init_variables import *  # noqa: F403
-from helpers import send_message, print_log, get_params
-from scripts import get_traekt, get_mixyz, do_sign_mod, calc_surface
+from state import state
+from helpers.params import apply_params, init_params
+from helpers.format_error import format_error
+from scripts import get_traekt, get_mixyz, do_sign_mod, get_surface, do_step
 
 
 def server_run():
-    print(f"UDP server running with port {rSrv.serverRecvPort}")
-    rSrv.tStart = time.time()  # Время запуска программы
+    init_params(state)  # Связываем apply_params с глобальным state
+
+    # Инициализация сервера
+    rSrv.tStart = time.time()
     rSrv.server_info = socket.getaddrinfo(
         "localhost", rSrv.serverRecvPort, socket.AF_UNSPEC, socket.SOCK_DGRAM
-    )  # Информация о сервере
-    rSrv.u = socket.socket(
-        socket.AF_INET, socket.SOCK_DGRAM
-    )  # Создание порта для получения сообщений
+    )
+    rSrv.u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     rSrv.u.bind((rSrv.serverIp, rSrv.serverRecvPort))
-    rSrv.u.settimeout(1.0)  # Устанавливаем таймаут в 1 секунду
-    send_message(
-        f"Hello from python mServer {ans}"
-    )  # Отправка приветственного сообщения
+    rSrv.u.settimeout(1.0)
+    rSrv.send(f"Hello from python mServer {ans}")
 
     try:
         while rSrv.cmd != "exit":
             try:
-                data = rSrv.u.recvfrom(4096)  # Ожидание запроса
-                rSrv.cmd = data[0].decode()  # Получение сообщения из запроса
-                print_log(
-                    rSrv.cmd, data[1]
-                )  # Вывод в логи сообщение, которое пришло с SamRLSim
+                data = rSrv.u.recvfrom(4096)
+                rSrv.cmd = data[0].decode()
+                rSrv.from_address = data[1]
+                rSrv.log()
 
-                vars = []  # Параметры из запроса для выполнения команд
-                commands = []  # Команды, которые необходимо выполнить
+                vars_list = []
+                commands = []
 
                 for i in rSrv.cmd.split("; "):
                     if i.strip() == "":
                         continue
-
                     if "=" in i:
-                        vars.append(i)
+                        vars_list.append(i)
                     else:
                         commands.append(i)
 
@@ -52,79 +49,47 @@ def server_run():
                     ans_str = str(ans)
                     if len(ans_str) > 8000:
                         ans_str = ans_str[:8000] + " ..."
-                    send_message(f"Ok. ans={ans_str}")
+                    rSrv.send(f"Ok. ans={ans_str}")
                     continue
 
                 # Отправка времени работы сервера
                 if "server time" in commands:
-                    send_message(
+                    rSrv.send(
                         f"Ok. Server uptime - {round(time.time() - rSrv.tStart)} s"
                     )
                     continue
 
-                # Установка констант
+                # Применяем параметры через безопасный apply_params
+                apply_params(vars_list)
+
+                # Скрыто, при запуске сервера все константы сами ставятся
                 # if "Set_Consts" in commands:
-                #     send_message("Ok. Consts set")
+                #     rSrv.send("Ok. Set_Consts called")
 
-                """
-                Сохранения в глобальный контекст параметров и выполнение команд из запроса
-                """
-
-                # Выполняем присваивание
-                parsed_params = get_params(vars)
-                for el in parsed_params:
-                    print("Параметр", el)
-                    exec(el, globals())
-
-                # Шаг: РЛС-МИ
                 if "Get_MiXyZ" in commands:
-                    get_mixyz(
-                        Nmax=globals()["Mi"].Nmax,
-                        Rs=globals()["Mi"].Rs,
-                        Rz=globals()["Mi"].Rz,
-                        Ry=globals()["Mi"].Ry,
-                        Zmax=globals()["Mi"].Zmax,
-                        Ymax=globals()["Mi"].Ymax,
-                        figext=globals()["test"].figext,
-                        result_path="resultFig1.bmp",
-                    )
-
-                    send_message("Ok. Get_MiXyZ called")
+                    get_mixyz()
+                    rSrv.send("Ok. Get_MiXyZ called")
 
                 # Шаг: Траект. Цель
                 if "Get_Traekt" in commands:
-                    get_traekt(
-                        Nimp=int(globals()["Rs"].Nimp),
-                        Xa=int(globals()["Tr"].Xa),
-                        Ya=int(globals()["Tr"].Ya),
-                        Za=int(globals()["Tr"].Za),
-                        Vx=int(globals()["Tr"].Vx),
-                        Vy=int(globals()["Tr"].Vy),
-                        Vz=int(globals()["Tr"].Vz),
-                        St_N=int(globals()["St"].N),
-                        St_Xs=int(globals()["Tr"].Xa) + 20,
-                        St_Ys=int(globals()["Tr"].Ya),
-                        St_Zs=int(globals()["Tr"].Za),
-                    )
-
-                    send_message("Ok. Get_Traekt called")
+                    get_traekt()
+                    rSrv.send("Ok. Get_Traekt called")
 
                 # Шаг: Фон
                 if "Get_Surface" in commands:
-                    cMass = calc_surface(globals())
-                    print(cMass)
-
-                    send_message("Ok. Get_Surface called")
+                    state.cMass = get_surface()
+                    print(state.cMass)
+                    rSrv.send("Ok. Get_Surface called")
 
                 # Шаг: Предрасчет
                 if "Do_SignMod" in commands:
-                    do_sign_mod(globals())
-
-                    send_message("Ok. Do_SignMod called")
+                    do_sign_mod()
+                    rSrv.send("Ok. Do_SignMod called")
 
                 # Шаг: ПНМ
                 if "Do_Step" in commands:
-                    send_message("Ok. Do_Step called")
+                    do_step()
+                    rSrv.send("Ok. Do_Step called")
 
             # Ждём следующей итерации
             except socket.timeout:
@@ -132,12 +97,9 @@ def server_run():
 
             # Обработка ошибок
             except Exception as e:
-                if e.__traceback__ is not None:
-                    rSrv.lastErr = f"{str(e)} In_file: {e.__traceback__.tb_frame.f_code.co_filename}, line {e.__traceback__.tb_lineno}"
-                else:
-                    rSrv.lastErr = f"{str(e)}"
+                rSrv.lastErr = format_error(e)
                 print(f"\n{rSrv.lastErr}")
-                send_message(rSrv.lastErr)
+                rSrv.send(rSrv.lastErr)
 
     # Обработка остановки сервера при Ctrl+C
     except KeyboardInterrupt:
@@ -145,7 +107,7 @@ def server_run():
 
     # Отключение сервера при KeyboardInterrupt и команды "exit"
     finally:
-        send_message("Ok. UDP server is down")
+        rSrv.send("Ok. UDP server is down")
         rSrv.u.close()
 
 

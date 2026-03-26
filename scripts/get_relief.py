@@ -1,7 +1,6 @@
 import numpy as np
 import os
 from typing import Any
-from settings.init_variables import Sf as TSf
 
 
 def get_relief(
@@ -17,7 +16,7 @@ def get_relief(
         tuple[Sf, Relief]
     """
 
-    Sf: TSf = globals["Sf"]
+    Sf = globals["Sf"]
     Relief = globals["Relief"]
     # Проверяем существование Relief, и если отсутствует (в Python мы просто проверим, существует ли переменная)
     # Поскольку Python не поддерживает такие же проверки, используем try-except

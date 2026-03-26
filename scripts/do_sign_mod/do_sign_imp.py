@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from math import pi
 
+from state import state
+
 
 # ==== Вспомогательные функции (заглушки, перепиши под свои) ====
 def Fun_Dir_Pat(angle, width, side, mode):
@@ -17,56 +19,52 @@ def Fun_dorUlabyC(angle, vid):
 
 
 # ==== Пример параметров ====
-ChannelN = 2
-FacetN = 5
-Nimp = 10
-tauimp = 1e-6
-dtau = 1e-8
 Sqw = 2
-c = 3e8
-snr = 20
-vidDNA = "SC1"
-kren = 0
-tang = 0
 
-DNA1 = np.array([30, 30])
-DNA2 = np.array([30, 30])
+kren = state.Tr.kren
+tang = state.Tr.tang
+
+DNA1 = np.array([50, 50])
+DNA2 = np.array([50, 50])
 f0 = np.array([10e9, 10e9])
 AnglX_Prm = np.array([0, 0])
 AnglZ_Prm = np.array([0, 0])
 AnglX_Prd = np.array([0, 0])
 AnglZ_Prd = np.array([0, 0])
 
-# случайные данные для демонстрации
-cMass = np.random.rand(14, FacetN)
-Tr = {"Pos": np.random.randn(Nimp, 3)}
-
-Rs = {"AruType": 0, "dR": 1, "Logi": False}
-
-NLb = round(Sqw * tauimp / dtau)
-NLi = round(tauimp / dtau)
-
 
 def do_sign_imp():
+    cMass = state.cMass
+    state.Rs.tauimp = 10 * state.ns
+    state.Rs.dtau = state.Rs.tauimp / 2
+
+    # случайные данные для демонстрации
+    Tr = {"Pos": np.random.randn(state.Rs.Nimp, 3)}
+
+    Rs = {"AruType": 0, "dR": 1, "Logi": False}
+
+    NLb = round(Sqw * state.Rs.tauimp / state.Rs.dtau)
+    NLi = round(state.Rs.tauimp / state.Rs.dtau)
+
     # ==== Основной цикл ====
     ScosNN = []
     SsinNN = []
 
-    for ChCnt in range(ChannelN):
+    for ChCnt in range(state.ChannelN):
         PdnaIzl = 81 / DNA1[ChCnt]
         PdnaPrm = 81 / DNA2[ChCnt]
-        ScosN = np.zeros(NLb * (Nimp + 1))
+        ScosN = np.zeros(NLb * (state.Rs.Nimp + 1))
         SsinN = np.zeros_like(ScosN)
 
-        for FacCnt in range(FacetN):
-            for ImpCnt in range(Nimp):
+        for FacCnt in range(state.FacetN):
+            for ImpCnt in range(state.Rs.Nimp):
                 X = cMass[0, FacCnt] - Tr["Pos"][ImpCnt, 0]
                 Y = cMass[1, FacCnt] - Tr["Pos"][ImpCnt, 1]
                 Z = cMass[2, FacCnt] - Tr["Pos"][ImpCnt, 2]
 
                 R = np.sqrt(X**2 + Y**2 + Z**2)
-                taur = 2 * R / c
-                NLr = round(taur / dtau)
+                taur = 2 * R / state.c
+                NLr = round(taur / state.Rs.dtau)
 
                 AnX = np.arctan(Y / X) + cMass[9, FacCnt]
                 AnZ = np.arctan(Y / Z) + cMass[10, FacCnt]
@@ -76,8 +74,12 @@ def do_sign_imp():
                 RsFeq = np.abs(Xeq + 1j * Zeq)
                 alfaFac = -np.arctan(RsFeq / Y)
 
-                aAntPrd = Fun_Dir_Pat(alfaFac, np.deg2rad(DNA1[ChCnt] / 2), 0, vidDNA)
-                aAntPrm = Fun_Dir_Pat(alfaFac, np.deg2rad(DNA2[ChCnt] / 2), 0, vidDNA)
+                aAntPrd = Fun_Dir_Pat(
+                    alfaFac, np.deg2rad(DNA1[ChCnt] / 2), 0, state.vidDNA
+                )
+                aAntPrm = Fun_Dir_Pat(
+                    alfaFac, np.deg2rad(DNA2[ChCnt] / 2), 0, state.vidDNA
+                )
 
                 Ador = Fun_Dir_Pat(alfaFac, cMass[8, FacCnt], 0, "G")
                 Amp = np.sqrt(cMass[5, FacCnt] * aAntPrd * aAntPrm * Ador / (R**4))
@@ -99,7 +101,7 @@ def do_sign_imp():
         NoiseS = np.random.randn(*SsinN.shape)
         SSpower = np.sum(np.abs(ScosN + 1j * SsinN))
         SSn = np.sum(np.abs(NoiseC + 1j * NoiseS))
-        NormN = (SSpower / SSn) / (10 ** (snr / 20))
+        NormN = (SSpower / SSn) / (10 ** (int(state.Rs.snr) / 20))
         ScosN += NoiseC * NormN
         SsinN += NoiseS * NormN
 
