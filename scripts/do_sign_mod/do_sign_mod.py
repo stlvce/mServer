@@ -66,8 +66,8 @@ def do_sign_mod():
         else:
             if state.Ym == 0:
                 # ==== Сохраняем данные импульсного сигнала ====
-                scipy.io.savemat("DataImp.mat", {"ScosNN": ScosNN, "SsinNN": SsinNN})
-                print("Сохранение данных импульсного сигнала... DataImp.mat")
+                # scipy.io.savemat("DataImp.mat", {"ScosNN": ScosNN, "SsinNN": SsinNN})
+                # print("Сохранение данных импульсного сигнала... DataImp.mat")
 
                 # Огибающая отражённого сигнала
                 envelope = np.abs(ScosNN[0] + 1j * SsinNN[0])

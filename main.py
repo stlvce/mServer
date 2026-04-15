@@ -5,6 +5,7 @@ from settings.server import rSrv, ans
 from state import state
 from helpers.params import apply_params, init_params
 from helpers.format_error import format_error
+from helpers.parse_msg import parse_msg
 from scripts import get_traekt, get_mixyz, do_sign_mod, get_surface, do_step
 
 
@@ -24,21 +25,14 @@ def server_run():
     try:
         while rSrv.cmd != "exit":
             try:
+                # Получение сообщения от клиента
                 data = rSrv.u.recvfrom(4096)
                 rSrv.cmd = data[0].decode()
                 rSrv.from_address = data[1]
                 rSrv.log()
 
-                vars_list = []
-                commands = []
-
-                for i in rSrv.cmd.split("; "):
-                    if i.strip() == "":
-                        continue
-                    if "=" in i:
-                        vars_list.append(i)
-                    else:
-                        commands.append(i)
+                # Получение параметров и команд с сообщения
+                vars_list, commands = parse_msg(rSrv.cmd)
 
                 # Выключение Python сервера
                 if "exit" in commands:
@@ -62,10 +56,7 @@ def server_run():
                 # Применяем параметры через безопасный apply_params
                 apply_params(vars_list)
 
-                # Скрыто, при запуске сервера все константы сами ставятся
-                # if "Set_Consts" in commands:
-                #     rSrv.send("Ok. Set_Consts called")
-
+                # Шаг: РЛС-МИ
                 if "Get_MiXyZ" in commands:
                     get_mixyz()
                     rSrv.send("Ok. Get_MiXyZ called")
