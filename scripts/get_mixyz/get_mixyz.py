@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (подключение 3D проекции)
 from PIL import Image
+import os
 
 from state import state
 from .set_rv_param import set_rv_param
@@ -440,9 +441,9 @@ def get_mixyz():
     plt.tight_layout()
     tmp_path = "tmp_mixyz.png"
     plt.savefig(tmp_path, dpi=100)
+    # TODO показываю график
+    # plt.show()
     plt.close(fig)
     Image.open(tmp_path).save("resultFig1.bmp")
-    import os
-
     os.remove(tmp_path)
     print("✅ График МИ сохранён в resultFig1.bmp")

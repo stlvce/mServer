@@ -42,9 +42,6 @@ def _evs_local(path: str, **extra) -> float:
         return 0.0
 
 
-result_path = "resultFig2.bmp"
-
-
 def get_traekt():
     """
     Расчёт точек в траектории по параметрам.
@@ -283,10 +280,12 @@ def get_traekt():
         pass
 
     # ==== Сохраняем график в файл resultFig2.bmp ====
-    tmp_path = "tmp_traekt.png"
     plt.tight_layout()
+    tmp_path = "tmp_traekt.png"
     plt.savefig(tmp_path, dpi=100)
+    # TODO показываю график
+    # plt.show()
     plt.close(fig)
-    Image.open(tmp_path).save(result_path)
+    Image.open(tmp_path).save("resultFig2.bmp")
     os.remove(tmp_path)
     print("✅ График траектории сохранён в resultFig2.bmp")
