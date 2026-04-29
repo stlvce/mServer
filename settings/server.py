@@ -1,5 +1,5 @@
-from socket import socket, AF_INET, SOCK_DGRAM
 from datetime import datetime
+from socket import AF_INET, SOCK_DGRAM, socket
 
 ans = "v.2.2"
 

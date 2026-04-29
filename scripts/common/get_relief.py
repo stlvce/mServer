@@ -1,6 +1,7 @@
-import numpy as np
 import os
 from typing import Any
+
+import numpy as np
 
 
 def get_relief(

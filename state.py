@@ -1,6 +1,6 @@
 import numpy as np
-from settings.models import consts, Rs, Mi, Tr, St, test, Sf, Sea
 
+from settings.models import Mi, Rs, Sea, Sf, St, Tr, consts, test
 
 # Типы полей верхнего уровня AppState — используются в apply_params для кастинга
 APP_STATE_TYPES: dict = {

@@ -1,12 +1,12 @@
 import socket
 import time
 
-from settings.server import rSrv, ans
-from state import state
-from helpers.params import apply_params, init_params
 from helpers.format_error import format_error
+from helpers.params import apply_params, init_params
 from helpers.parse_msg import parse_msg
-from scripts import get_traekt, get_mixyz, do_sign_mod, get_surface, do_step
+from scripts import do_sign_mod, do_step, get_mixyz, get_surface, get_traekt
+from settings.server import ans, rSrv
+from state import state
 
 
 def server_run():
