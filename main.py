@@ -4,7 +4,7 @@ import time
 from helpers.format_error import format_error
 from helpers.params import apply_params, init_params
 from helpers.parse_msg import parse_msg
-from scripts import do_sign_mod, do_step, get_mixyz, get_surface, get_traekt
+from scripts import do_sign_mod, do_step, get_mixyz, get_surface, get_traekt, show_dna
 from settings.server import ans, rSrv
 from state import state
 
@@ -60,6 +60,10 @@ def server_run():
                 if "Get_MiXyZ" in commands:
                     get_mixyz()
                     rSrv.send("Ok. Get_MiXyZ called")
+
+                if "Show_DNA" in commands:
+                    show_dna()
+                    rSrv.send("Ok. Show_DNA called")
 
                 # Шаг: Траект. Цель
                 if "Get_Traekt" in commands:

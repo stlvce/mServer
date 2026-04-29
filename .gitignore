@@ -15,3 +15,4 @@ _data/
 
 # Saved data
 saved_data/
+*.mat
