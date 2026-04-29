@@ -1,13 +1,14 @@
 import math
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (подключение 3D проекции)
-from PIL import Image
-import os
 
+import matplotlib.pyplot as plt
+import numpy as np
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (подключение 3D проекции)
+
+from helpers import save_fig_as_bmp
 from state import state
-from .set_rv_param import set_rv_param
+
 from .set_mi_param import set_mi_param
+from .set_rv_param import set_rv_param
 
 
 def get_mixyz():
@@ -437,13 +438,5 @@ def get_mixyz():
         f"Angles of first elements have AlfaX={state.AlfaX / math.pi * 180 * 2:.6g}, AlfaZ={state.AlfaZ / math.pi * 180 * 2:.6g}"
     )
 
-    # ==== Сохраняем график в файл resultFig1.bmp ====
     plt.tight_layout()
-    tmp_path = "tmp_mixyz.png"
-    plt.savefig(tmp_path, dpi=100)
-    # TODO показываю график
-    # plt.show()
-    plt.close(fig)
-    Image.open(tmp_path).save("resultFig1.bmp")
-    os.remove(tmp_path)
-    print("✅ График МИ сохранён в resultFig1.bmp")
+    save_fig_as_bmp("resultFig1.bmp")

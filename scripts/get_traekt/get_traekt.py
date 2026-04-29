@@ -1,10 +1,9 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
-from PIL import Image
-import os
 
-from state import state, evs
+from helpers import save_fig_as_bmp
+from state import evs, state
 
 
 def _evs_local(path: str, **extra) -> float:
@@ -279,13 +278,5 @@ def get_traekt():
     except Exception:
         pass
 
-    # ==== Сохраняем график в файл resultFig2.bmp ====
     plt.tight_layout()
-    tmp_path = "tmp_traekt.png"
-    plt.savefig(tmp_path, dpi=100)
-    # TODO показываю график
-    # plt.show()
-    plt.close(fig)
-    Image.open(tmp_path).save("resultFig2.bmp")
-    os.remove(tmp_path)
-    print("✅ График траектории сохранён в resultFig2.bmp")
+    save_fig_as_bmp("resultFig2.bmp")

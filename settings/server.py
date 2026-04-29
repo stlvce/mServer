@@ -1,6 +1,8 @@
 from datetime import datetime
 from socket import AF_INET, SOCK_DGRAM, socket
 
+from rich import print
+
 ans = "v.2.2"
 
 
@@ -27,9 +29,9 @@ class RSrv:
     ):
         current_datetime = datetime.now()
         formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
-        print(f"\n{formatted_datetime}")
-        print(f"Отправитель: {self.from_address}")
-        print(f"Сообщение: {self.cmd}")
+        print(f"\n[bold blue]{formatted_datetime}[/bold blue]")
+        print(f"[bold]Отправитель[/bold]: {self.from_address}")
+        print(f"[bold]Сообщение[/bold]: {self.cmd}")
 
     def send(self, msg: str):
         # Создание сокета для отправки

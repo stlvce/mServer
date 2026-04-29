@@ -1,8 +1,7 @@
-import numpy as np
 import matplotlib.pyplot as plt
-import base64
-from PIL import Image
-import os
+import numpy as np
+
+from helpers import save_fig_as_bmp
 
 
 def show_relief(Relief):
@@ -66,11 +65,4 @@ def show_relief(Relief):
     )
     plt.colorbar()
 
-    # Пути к PNG и BMP в корне проекта
-    png_path = "relief.png"
-    bmp_path = "relief.bmp"
-
-    # Сохраняем как PNG, потом конвертируем в BMP
-    plt.savefig(png_path)
-    with Image.open(png_path) as img:
-        img.convert("RGB").save(bmp_path, format="BMP")
+    save_fig_as_bmp("relief.bmp")

@@ -1,8 +1,7 @@
-import numpy as np
-import os
-import matplotlib.pyplot as plt
-from PIL import Image
 from math import pi
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 from state import state
 
@@ -113,18 +112,12 @@ def do_sign_imp():
     SsinNN = np.array(SsinNN)
     signal_env = np.abs(ScosNN[0] + 1j * SsinNN[0])
 
-    # plt.figure(figsize=(10, 5))
-    # plt.plot(signal_env)
-    # plt.title("Отражённый сигнал (огибающая)")
-    # plt.xlabel("Относительная дальность (отсчёты)")
-    # plt.ylabel("Норм. амплитуда")
-    # plt.grid(True)
-    # plt.tight_layout()
-    # plt.savefig("signal.png", dpi=150)
-    # Image.open("signal.png").convert("RGB").save("signal.bmp")
-    # os.remove("signal.png")
-    # plt.close()
-
-    print("✅ График сохранён как signal.bmp")
+    plt.figure(figsize=(10, 5))
+    plt.plot(signal_env)
+    plt.title("Отражённый сигнал (огибающая)")
+    plt.xlabel("Относительная дальность (отсчёты)")
+    plt.ylabel("Норм. амплитуда")
+    plt.grid(True)
+    plt.tight_layout()
 
     return ScosNN, SsinNN

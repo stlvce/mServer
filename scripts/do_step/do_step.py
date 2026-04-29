@@ -1,8 +1,7 @@
-import io
-import numpy as np
 import matplotlib.pyplot as plt
-import platform
+import numpy as np
 
+from helpers import copy_fig_to_clipboard
 from state import state
 
 
@@ -117,31 +116,4 @@ def do_step():
 
     plt.suptitle(f"МИ | t = {state.t:.3f} с", fontsize=12)
     plt.tight_layout()
-
-    # ==== Сохраняем график в буфер обмена ====
-    buf = io.BytesIO()
-    plt.savefig(buf, format="png", dpi=100)
-    plt.close(fig)
-    buf.seek(0)
-
-    sysname = platform.system()
-    if sysname == "Windows":
-        from io import BytesIO
-        import win32clipboard
-
-        image_buf = BytesIO()
-        from PIL import Image
-
-        Image.open(buf).convert("RGB").save(image_buf, "BMP")
-        data = image_buf.getvalue()[14:]  # убрать BMP-заголовок
-        image_buf.close()
-
-        win32clipboard.OpenClipboard()
-        win32clipboard.EmptyClipboard()
-        win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-        win32clipboard.CloseClipboard()
-        print(
-            "✅ График МИ скопирован в буфер обмена (Windows). Можно вставить Ctrl+V."
-        )
-
-    buf.close()
+    copy_fig_to_clipboard()  # Сохранение графика в буфер обмена

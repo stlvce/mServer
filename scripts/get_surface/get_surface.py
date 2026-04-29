@@ -1,20 +1,9 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
-from PIL import Image
-import io
-import sys
 
+from helpers import save_fig_as_bmp
 from state import state
-
-_WIN32_CLIPBOARD_AVAILABLE = False
-try:
-    import win32clipboard
-
-    _WIN32_CLIPBOARD_AVAILABLE = True
-except ImportError:
-    pass
-
 
 # Маркеры для типов поверхности (индекс = тип)
 # 1=грунт, 2=вода, 3=трава, 4=лес, 5=снег/скалы, 6=песок, 7=город, 8=кусты, 9=уголк.отраж.
@@ -30,27 +19,6 @@ COLOR = {
     8: "lime",
     9: "red",
 }
-
-
-def send_image_to_clipboard(image: Image.Image):
-    """Копирует PIL Image в системный буфер обмена (только Windows)."""
-    if not _WIN32_CLIPBOARD_AVAILABLE:
-        print(
-            "⚠️  Копирование в буфер обмена поддерживается только на Windows (требуется pywin32).",
-            file=sys.stderr,
-        )
-        return False
-    output = io.BytesIO()
-    image.convert("RGB").save(output, "BMP")
-    data = output.getvalue()[14:]
-    output.close()
-    win32clipboard.OpenClipboard()
-    try:
-        win32clipboard.EmptyClipboard()
-        win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-    finally:
-        win32clipboard.CloseClipboard()
-    return True
 
 
 def get_surface():
@@ -539,21 +507,7 @@ def get_surface():
     else:
         ax.set_title("Поверхность (пятно облучения)", fontsize=9, fontweight="normal")
 
-    # ==== Копируем график в буфер обмена ====
     plt.tight_layout()
-    buf = io.BytesIO()
-    plt.savefig(buf, format="png", dpi=100)
-    # TODO показываю график
-    # plt.show()
-    plt.close(fig)
-    buf.seek(0)
-    pil_img = Image.open(buf)
-    success = send_image_to_clipboard(pil_img)
-    buf.close()
-
-    if success:
-        print("✅ График поверхности скопирован в буфер обмена.")
-    else:
-        print("❌ Не удалось скопировать график в буфер обмена.")
+    save_fig_as_bmp("resultFig3.bmp")
 
     return cMass

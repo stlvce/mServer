@@ -1,8 +1,7 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from PIL import Image
-import io
 from math import pi
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 # ====== заглушки вспомогательных функций (реализуй свои) ======
@@ -143,13 +142,5 @@ def do_sign_fm():
     plt.ylabel("Норм. амплитуда² (В²)")
     plt.grid(True)
     plt.tight_layout()
-
-    # ====== сохранить график в BMP ======
-    buf = io.BytesIO()
-    plt.savefig(buf, format="png", dpi=150)
-    plt.close()
-    buf.seek(0)
-    Image.open(buf).convert("RGB").save("signal2.bmp")
-    print("✅ График сохранён как signal2.bmp")
 
     return SigSN

@@ -1,41 +1,12 @@
-import io
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io
-import matplotlib.pyplot as plt
-from PIL import Image
-import platform
 
+from helpers import copy_fig_to_clipboard
 from state import state
-from .do_sign_imp import do_sign_imp
+
 from .do_sign_fm import do_sign_fm
-
-
-def _copy_to_clipboard(image: Image.Image):
-    """Копирует PIL Image в буфер обмена (только Windows)."""
-    if platform.system() != "Windows":
-        return
-    import win32clipboard
-    from io import BytesIO
-
-    output = BytesIO()
-    image.convert("RGB").save(output, "BMP")
-    data = output.getvalue()[14:]  # убрать BMP-заголовок
-    output.close()
-    win32clipboard.OpenClipboard()
-    win32clipboard.EmptyClipboard()
-    win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
-    win32clipboard.CloseClipboard()
-
-
-def _save_fig_to_clipboard():
-    """Сохраняет текущий график matplotlib в буфер обмена."""
-    buf = io.BytesIO()
-    plt.savefig(buf, format="png", dpi=100)
-    plt.close()
-    buf.seek(0)
-    image = Image.open(buf)
-    _copy_to_clipboard(image)
-    buf.close()
+from .do_sign_imp import do_sign_imp
 
 
 def do_sign_mod():
@@ -78,11 +49,6 @@ def do_sign_mod():
                 plt.ylabel("Амплитуда (норм.)")
                 plt.grid(True)
                 plt.tight_layout()
-                # ==== Копируем график в буфер обмена ====
-                _save_fig_to_clipboard()
-                print(
-                    "✅ График скопирован в буфер обмена (Windows). Можно вставить Ctrl+V."
-                )
 
             else:
                 # ==== Сохраняем данные ЛЧМ сигнала ====
@@ -98,11 +64,8 @@ def do_sign_mod():
                 plt.ylabel("Амплитуда (норм.)")
                 plt.grid(True)
                 plt.tight_layout()
-                # ==== Копируем график в буфер обмена ====
-                _save_fig_to_clipboard()
-                print(
-                    "✅ ЛЧМ сигнал скопирован в буфер обмена (Windows). Можно вставить Ctrl+V."
-                )
+
+            copy_fig_to_clipboard()
 
     # ==== Обработка исключений ====
     except Exception as e:
