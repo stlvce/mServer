@@ -13,25 +13,7 @@ APP_STATE_TYPES: dict = {
     "Ym": int,
     "Sqw": int,
     "ChannelN": int,
-    "DNA1n": int,
-    "DNA2n": int,
     "f0n": float,
-    "AnglX_Prmn": int,
-    "AnglZ_Prmn": int,
-    "AnglX_Prdn": int,
-    "AnglZ_Prdn": int,
-    "dH1": int,
-    "Kr1": int,
-    "DOR1": int,
-    "dH2": int,
-    "Kr2": int,
-    "DOR2": int,
-    "dH7": int,
-    "Kr7": int,
-    "DOR7": int,
-    "dH8": int,
-    "Kr8": int,
-    "DOR8": int,
     "vidDNA": str,
     "vidDOR1": str,
     "vidDOR2": str,
@@ -83,27 +65,18 @@ class AppState:
         self.n: list = []
         self.nr: list = []
         self.ChannelN: int = 0
-        self.DNA1n: int = 0
-        self.DNA2n: int = 0
+        self.DNA1 = []
+        self.DNA2 = []
         self.f0n: float = 0.0
         self.f0: list = [4.3e9, 4.3e9]  # частоты, Гц
-        self.AnglX_Prmn: int = 0
-        self.AnglZ_Prmn: int = 0
-        self.AnglX_Prdn: int = 0
-        self.AnglZ_Prdn: int = 0
+        self.AnglX_Prm: list[int] = []
+        self.AnglZ_Prm: list[int] = []
+        self.AnglX_Prd: list[int] = []
+        self.AnglZ_Prd: list[int] = []
         self.Sqw: int = 0
-        self.dH1: int = 0
-        self.Kr1: int = 0
-        self.DOR1: int = 0
-        self.dH2: int = 0
-        self.Kr2: int = 0
-        self.DOR2: int = 0
-        self.dH7: int = 0
-        self.Kr7: int = 0
-        self.DOR7: int = 0
-        self.dH8: int = 0
-        self.Kr8: int = 0
-        self.DOR8: int = 0
+        self.dH: list[int] = []
+        self.Kr: list[int] = []
+        self.DOR: list[int] = []
 
         # --- Сигналы ---
         self.SigCN: np.ndarray = np.random.rand(3, 100, 100)

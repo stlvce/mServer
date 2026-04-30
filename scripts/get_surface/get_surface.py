@@ -66,8 +66,8 @@ def get_surface():
         kren = 0.0
 
     # Углы отклонения луча
-    AnglZ_Prm = np.atleast_1d(state.AnglZ_Prmn)
-    AnglX_Prm = np.atleast_1d(state.AnglX_Prmn)
+    AnglZ_Prm = np.atleast_1d(state.AnglZ_Prm[0])
+    AnglX_Prm = np.atleast_1d(state.AnglX_Prm[0])
     AnZ = np.deg2rad(float(np.mean(AnglZ_Prm)))  # угол отклонения луча по оси Z
     AnX = np.deg2rad(float(np.mean(AnglX_Prm)))  # угол отклонения луча по оси X
 
@@ -180,7 +180,7 @@ def get_surface():
         cMass[2, FC_global] = Sf.Dspot * cZ + Zc1  # Z координата
 
     # ---- Подготовка графика ----
-    fig = plt.figure(figsize=(8, 8), dpi=100)
+    fig = plt.figure(figsize=(6, 6), dpi=100)
     ax = fig.add_subplot(111, projection="3d")
     legend_labels = []
 

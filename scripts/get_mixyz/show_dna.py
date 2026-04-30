@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
-from rich import print
 
 from helpers.save_bmp import save_fig_as_bmp
 from state import state
@@ -63,7 +62,7 @@ def _fun_dir_pat(
 
 def show_dna():
     """
-    Отображение ДНА по параметрам из state. Аналог Show_DNA.m.
+    Отображение ДНА по параметрам из state.
 
     Для одноканальной системы (ChannelN==1) строит сечения ДНА передающей
     и приёмной антенн в плоскостях XY и ZY.
@@ -80,18 +79,16 @@ def show_dna():
     # --- параметры из state ---
     # DNA1n/DNA2n — ширина ДНА в градусах (DNA2 может быть комплексным:
     # real=ширина по X, imag=ширина по Z для неосесимметричной ДНА)
-    DNA1 = float(state.DNA1n)
-    DNA2 = complex(state.DNA2n, 0)
     n_ch = max(state.ChannelN, 1)
     vidDNA = state.vidDNA
 
     # Текущий state хранит единственный набор параметров — реплицируем по каналам
-    DNA1_arr = [DNA1] * n_ch
-    DNA2_arr = [DNA2] * n_ch
-    AnglX_Prm = [float(state.AnglX_Prmn)] * n_ch
-    AnglZ_Prm = [float(state.AnglZ_Prmn)] * n_ch
-    AnglX_Prd = [float(state.AnglX_Prdn)] * n_ch
-    AnglZ_Prd = [float(state.AnglZ_Prdn)] * n_ch
+    DNA1_arr = [float(state.DNA1[0])] * n_ch
+    DNA2_arr = [float(state.DNA2[0])] * n_ch
+    AnglX_Prm = [float(state.AnglX_Prm[0])] * n_ch
+    AnglZ_Prm = [float(state.AnglZ_Prm[0])] * n_ch
+    AnglX_Prd = [float(state.AnglX_Prd[0])] * n_ch
+    AnglZ_Prd = [float(state.AnglZ_Prd[0])] * n_ch
 
     # --- выбор компоновки фигуры ---
     # 3D-подграфик строится только при неосесимметричной ДНА (imag(DNA2) > 0)
@@ -102,7 +99,7 @@ def show_dna():
         ax3d = fig.add_subplot(2, 1, 1, projection="3d")
         ax2d = fig.add_subplot(2, 1, 2)
     else:
-        fig, ax2d = plt.subplots(1, 1, figsize=(10, 5))
+        fig, ax2d = plt.subplots(1, 1, figsize=(6, 3))
         ax3d = None
 
     try:

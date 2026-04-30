@@ -3,6 +3,7 @@ import numpy as np
 import scipy.io
 
 from helpers import copy_fig_to_clipboard
+from settings.server import rSrv
 from state import state
 
 from .do_sign_fm import do_sign_fm
@@ -36,31 +37,25 @@ def do_sign_mod():
 
         else:
             if state.Ym == 0:
-                # ==== Сохраняем данные импульсного сигнала ====
-                # scipy.io.savemat("DataImp.mat", {"ScosNN": ScosNN, "SsinNN": SsinNN})
-                # print("Сохранение данных импульсного сигнала... DataImp.mat")
-
-                # Огибающая отражённого сигнала
-                envelope = np.abs(ScosNN[0] + 1j * SsinNN[0])
-                plt.figure(figsize=(10, 5))
-                plt.plot(envelope, color="blue")
-                plt.title("Огибающая отражённого сигнала")
-                plt.xlabel("Относительная дальность (м)")
-                plt.ylabel("Амплитуда (норм.)")
-                plt.grid(True)
-                plt.tight_layout()
+                # Сохраняем данные импульсного сигнала (аналог: save DataImp.mat)
+                scipy.io.savemat("DataImp.mat", {"ScosNN": ScosNN, "SsinNN": SsinNN})
+                print("Сохранение данных импульсного сигнала... DataImp.mat")
+                # Построение графика в MATLAB закомментировано — здесь тоже не строим
 
             else:
-                # ==== Сохраняем данные ЛЧМ сигнала ====
+                # Сохраняем данные ЛЧМ сигнала (аналог: save DataFM.mat)
                 scipy.io.savemat(
                     "DataFM.mat", {"SigSN": SigSN, "SigCN": SigCN, "Ni": Ni}
                 )
                 print("Сохранение данных ЛЧМ сигнала... DataFM.mat")
 
-                plt.figure(figsize=(10, 5))
-                plt.plot(SigSN, color="green")
+                # Аналог plot(SigSN): SigSN может быть 3D (каналы × антенны × отсчёты),
+                # приводим к 2D — (отсчёты × N кривых) и строим все кривые первого канала
+                sig_2d = SigSN[0].T  # (samples, antennas)
+                plt.figure(figsize=(6, 3))
+                plt.plot(sig_2d)
                 plt.title("ЛЧМ сигнал")
-                plt.xlabel("Относительное время (отсчёты)")
+                plt.xlabel("Относительная дальность (отсчёты)")
                 plt.ylabel("Амплитуда (норм.)")
                 plt.grid(True)
                 plt.tight_layout()

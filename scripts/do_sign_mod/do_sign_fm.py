@@ -1,146 +1,198 @@
 from math import pi
 
-import matplotlib.pyplot as plt
 import numpy as np
 
-
-# ====== заглушки вспомогательных функций (реализуй свои) ======
-def Fun_Dir_Pat(angle, width, side, mode):
-    return np.cos(angle) ** 2
+from helpers.save_bmp import save_fig_as_bmp
+from state import state
 
 
-def Fun_dorUlabyC(angle, vid):
-    return -10 * (angle / (pi / 4)) ** 2
+def _fun_dir_pat(
+    angle: np.ndarray, half_width: float, side: int, mode: str
+) -> np.ndarray:
+    a = np.atleast_1d(np.asarray(angle, dtype=float))
+    if half_width == 0:
+        return np.ones_like(a)
+    x = a / half_width
+    if mode == "G":
+        y = np.exp(-(x**2) * np.log(2))
+    elif mode.startswith("SC"):
+        pi_x = np.pi * x
+        sinc = np.where(np.abs(pi_x) < 1e-9, 1.0, np.sin(pi_x) / pi_x)
+        y = sinc**2
+    else:
+        y = np.cos(np.clip(a, -np.pi / 2, np.pi / 2)) ** 2
+    result = np.abs(y)
+    if side > 0:
+        result[a < 0] = 0.0
+    elif side < 0:
+        result[a > 0] = 0.0
+    return result
 
 
-# ====== пример параметров (должны быть заданы извне) ======
-test = {"canceling": 0, "pF": 1, "pN": 3}
-ChannelN = 2
-FacetN = 5
-Nimp = 10
-Tm = 1e-4
-dtau = 1e-7
-c = 3e8
-Wd = 1e6
-snr = 20
-vidDNA = "SC1"
-vidDOR = ["G"] * FacetN
-DNA1 = np.array([30, 30])
-DNA2 = np.array([30, 30])
-f0 = np.array([10e9, 10e9])
-AnglX_Prm = np.zeros(ChannelN)
-AnglZ_Prm = np.zeros(ChannelN)
-AnglX_Prd = np.zeros(ChannelN)
-AnglZ_Prd = np.zeros(ChannelN)
-kren = 0
-tang = 0
-cMass = np.random.rand(14, FacetN)
-Tr = {"Pos": np.random.randn(Nimp, 3), "Tm": np.linspace(1, Nimp, Nimp)}
+def _fun_dor_ulaby_c(angle: float, vid: str) -> float:
+    return -10.0 * (angle / (np.pi / 4)) ** 2
 
-# ====== расчёт ======
-perc_mem = -1
-Ni = round(Tm / dtau)
-SigCN = np.zeros((ChannelN, Nimp, Ni))
-SigSN = np.zeros_like(SigCN)
+
+def _get_vid_dor(surface_type: int) -> str:
+    mapping: dict[int, str] = {
+        1: state.vidDOR1,
+        2: state.vidDOR2,
+        7: state.vidDOR7,
+    }
+    return mapping.get(int(surface_type), "G")
 
 
 def do_sign_fm():
-    for ChCnt in range(ChannelN):
-        if test["canceling"]:
+    """
+    Модель сигнала для ЛЧМ радара с СА.
+    Аналог Do_SignFM.m.
+    Возвращает (SigSN, SigCN, Ni).
+    """
+    Rs = state.Rs
+    Tr = state.Tr
+    cMass = state.cMass
+
+    n_ch = max(int(state.ChannelN), 1)
+    FacetN = int(state.FacetN)
+    Nimp = int(Rs.Nimp)
+    dtau = float(Rs.dtau)
+    Tm = float(Rs.Tm)
+    snr_lin = float(Rs.snr)
+    Wd = float(state.Wd)
+
+    Ni = round(Tm / dtau)  # отсчётов в ЛЧМ-импульсе
+
+    DNA1_arr = [float(state.DNA1[0])] * n_ch
+    DNA2_arr = [float(state.DNA2[0])] * n_ch
+    AnglX_Prm = [float(state.AnglX_Prm[0])] * n_ch
+    AnglZ_Prm = [float(state.AnglZ_Prm[0])] * n_ch
+    AnglX_Prd = [float(state.AnglX_Prd[0])] * n_ch
+    AnglZ_Prd = [float(state.AnglZ_Prd[0])] * n_ch
+    f0_arr = [
+        float(v)
+        for v in (state.f0[:n_ch] if len(state.f0) >= n_ch else [state.f0[0]] * n_ch)
+    ]
+
+    kren = float(Tr.kren)
+    tang = float(Tr.tang)
+
+    Tr_Tm = Tr.Tm  # время каждого импульса (массив длиной Nimp)
+
+    SigCN = np.zeros((n_ch, Nimp, Ni))
+    SigSN = np.zeros_like(SigCN)
+
+    tt = np.arange(Ni)  # общий для всех итераций (не зависит от FacCnt/ImpCnt)
+
+    for ChCnt in range(n_ch):
+        if state.test.canceling:
             break
 
-        PdnaIzl = 81 / DNA1[ChCnt]
-        PdnaPrm = 81 / DNA2[ChCnt]
         SigS = np.zeros((Nimp, Ni))
         SigC = np.zeros_like(SigS)
 
         for FacCnt in range(FacetN):
-            perc = round(100 * (FacCnt + ChCnt * FacetN) / (FacetN * ChannelN))
-            if perc > perc_mem:
-                perc_mem = perc
-                print(f"Progress: {perc}%")
+            if state.test.canceling:
+                break
+
+            perc = round(100 * (FacCnt + ChCnt * FacetN) / (FacetN * n_ch))
+            # TODO убрать комментарий
+            # print(f"Канал {ChCnt + 1}/{n_ch}, фацет {FacCnt + 1}/{FacetN} ({perc}%)")
 
             for ImpCnt in range(Nimp):
-                X = cMass[0, FacCnt] - Tr["Pos"][ImpCnt, 0]
-                Y = cMass[1, FacCnt] - Tr["Pos"][ImpCnt, 1]
-                Z = cMass[2, FacCnt] - Tr["Pos"][ImpCnt, 2]
+                X = cMass[0, FacCnt] - Tr.Pos[ImpCnt, 0]
+                Y = cMass[1, FacCnt] - Tr.Pos[ImpCnt, 1]
+                Z = cMass[2, FacCnt] - Tr.Pos[ImpCnt, 2]
+
                 R = np.sqrt(X**2 + Y**2 + Z**2)
-                taur = 2 * R / c
+                if R < 1e-9:
+                    continue
 
-                AnX = np.arctan(Y / X) + np.deg2rad(cMass[9, FacCnt])
-                AnZ = np.arctan(Y / Z) + np.deg2rad(cMass[10, FacCnt])
-                Xeq = Y / np.tan(AnX)
-                Zeq = Y / np.tan(AnZ)
-                RsFeq = np.abs(Xeq + 1j * Zeq)
-                alfaFac = np.arctan(RsFeq / Y)
+                taur = 2.0 * R / state.c
 
-                Ya1 = np.abs(Y)
+                AnX = np.arctan2(Y, X) + cMass[9, FacCnt]
+                AnZ = np.arctan2(Y, Z) + cMass[10, FacCnt]
+                Xeq = Y / (np.tan(AnX) if abs(np.tan(AnX)) > 1e-9 else 1e-9)
+                Zeq = Y / (np.tan(AnZ) if abs(np.tan(AnZ)) > 1e-9 else 1e-9)
+                RsFeq = abs(Xeq + 1j * Zeq)
+                alfaFac = -np.arctan2(RsFeq, abs(Y))
+
+                Ya1 = abs(Y)
                 Xa1 = Ya1 * np.tan(np.deg2rad(AnglX_Prm[ChCnt] + kren))
                 Za1 = Ya1 * np.tan(np.deg2rad(AnglZ_Prm[ChCnt] + tang))
-                alfaAnt_Prm = np.arccos(
-                    (Y * Ya1 + X * Xa1 + Z * Za1)
-                    / (R * np.sqrt(Ya1**2 + Xa1**2 + Za1**2))
-                )
+                norm1 = np.sqrt(Ya1**2 + Xa1**2 + Za1**2)
+                cos_prm = -(Y * Ya1 + X * Xa1 + Z * Za1) / (R * norm1 + 1e-30)
+                alfaAnt_Prm = np.arccos(np.clip(cos_prm, -1.0, 1.0))
 
-                Ya2 = np.abs(Y)
+                Ya2 = abs(Y)
                 Xa2 = Ya2 * np.tan(np.deg2rad(AnglX_Prd[ChCnt] + kren))
                 Za2 = Ya2 * np.tan(np.deg2rad(AnglZ_Prd[ChCnt] + tang))
-                alfaAnt_Prd = np.arccos(
-                    (Y * Ya2 + X * Xa2 + Z * Za2)
-                    / (R * np.sqrt(Ya2**2 + Xa2**2 + Za2**2))
-                )
+                norm2 = np.sqrt(Ya2**2 + Xa2**2 + Za2**2)
+                cos_prd = -(Y * Ya2 + X * Xa2 + Z * Za2) / (R * norm2 + 1e-30)
+                alfaAnt_Prd = np.arccos(np.clip(cos_prd, -1.0, 1.0))
 
-                aAntPrd = Fun_Dir_Pat(
-                    alfaAnt_Prd - pi, np.deg2rad(DNA1[ChCnt] / 2), 0, vidDNA
+                aAntPrd = float(
+                    _fun_dir_pat(
+                        alfaAnt_Prd, np.deg2rad(DNA1_arr[ChCnt] / 2), 0, state.vidDNA
+                    )[0]
                 )
-                aAntPrm = Fun_Dir_Pat(
-                    alfaAnt_Prm - pi, np.deg2rad(DNA2[ChCnt] / 2), 0, vidDNA
+                aAntPrm = float(
+                    _fun_dir_pat(
+                        alfaAnt_Prm, np.deg2rad(DNA2_arr[ChCnt] / 2), 0, state.vidDNA
+                    )[0]
                 )
+                if np.isnan(aAntPrd):
+                    aAntPrd = 0.0
+                if np.isnan(aAntPrm):
+                    aAntPrm = 0.0
 
-                if vidDOR[int(abs(cMass[4, FacCnt]))] == "G":
-                    Ador = Fun_Dir_Pat(alfaFac, cMass[8, FacCnt], 0, "G")
+                vid_dor = _get_vid_dor(int(cMass[4, FacCnt]))
+                if vid_dor == "G":
+                    Ador = float(_fun_dir_pat(alfaFac, cMass[8, FacCnt], 0, "G")[0])
                 else:
-                    Ador = 10 ** (
-                        Fun_dorUlabyC(alfaFac, vidDOR[int(abs(cMass[4, FacCnt]))]) / 10
-                    )
+                    Ador = float(10.0 ** (_fun_dor_ulaby_c(alfaFac, vid_dor) / 10.0))
 
-                Amp = np.sqrt(cMass[5, FacCnt] * aAntPrd * aAntPrm * Ador / (R**4))
-                Fb = 2 * Wd * R / (c * Tr["Tm"][ImpCnt])
-
-                tt = np.arange(Ni)
-                fc = f0[ChCnt] + Wd * (tt / Ni - 0.5)
-                Arg = (
-                    2 * pi * Fb * Tr["Tm"][ImpCnt] * tt / Ni + 2 * pi * f0[ChCnt] * taur
+                Amp = np.sqrt(
+                    cMass[5, FacCnt] * float(aAntPrd) * float(aAntPrm) * Ador / (R**4)
                 )
-                SigFc = Amp * np.cos(Arg + cMass[3, FacCnt])
-                SigFs = Amp * np.sin(Arg + cMass[3, FacCnt])
 
-                SigS[ImpCnt, :] += SigFs
-                SigC[ImpCnt, :] += SigFc
+                # Доплеровская биение-частота
+                Tm_i = float(Tr_Tm[ImpCnt]) if len(Tr_Tm) > ImpCnt else Tm
+                Fb = 2.0 * Wd * R / (state.c * Tm_i) if Tm_i != 0 else 0.0
 
-        SigC[np.isnan(SigC)] = 0
-        SigS[np.isnan(SigS)] = 0
+                Arg = 2.0 * pi * Fb * Tm_i * tt / Ni + 2.0 * pi * f0_arr[ChCnt] * taur
+                SigC[ImpCnt, :] += Amp * np.cos(Arg + cMass[3, FacCnt])
+                SigS[ImpCnt, :] += Amp * np.sin(Arg + cMass[3, FacCnt])
+
+        SigC[np.isnan(SigC)] = 0.0
+        SigS[np.isnan(SigS)] = 0.0
 
         SSpower = np.sum(np.abs(SigC + 1j * SigS))
         NoiseC = np.random.randn(Nimp, Ni)
         NoiseS = np.random.randn(Nimp, Ni)
         SSn = np.sum(np.abs(NoiseC + 1j * NoiseS))
-        NormN = (SSpower / SSn) / (10 ** (snr / 20))
-        SigCN[ChCnt, :, :] = SigC + NoiseC * NormN
-        SigSN[ChCnt, :, :] = SigS + NoiseS * NormN
+        NormN = (SSpower / SSn) / (10 ** (snr_lin / 20)) if SSn > 0 else 0.0
+        SigCN[ChCnt] = SigC + NoiseC * NormN
+        SigSN[ChCnt] = SigS + NoiseS * NormN
 
-    # ====== построение графика ======
-    ii_start = int(1 + Ni * (test["pF"] - 1))
-    ii_end = int(min(round(Ni * test["pN"]), SigCN.shape[2]))
+    # Визуализация (аналог figure(5) в MATLAB)
+    pF = max(state.test.pF, 1)
+    pN = max(state.test.pN, 1)
+    ii_start = int(Ni * (pF - 1))
+    ii_end = int(min(round(Ni * pN), SigCN.shape[2]))
     ii = np.arange(ii_start, ii_end)
+
+    import matplotlib.pyplot as plt
+
     signal_env = np.abs(SigCN[0, 0, ii] + 1j * SigSN[0, 0, ii]) + 1e-10
 
-    plt.figure(figsize=(10, 5))
-    plt.plot(ii, signal_env, color="blue")
-    plt.title("Отражённый сигнал")
-    plt.xlabel("Относительная дальность (м)")
-    plt.ylabel("Норм. амплитуда² (В²)")
-    plt.grid(True)
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(ii, signal_env, color="blue")
+    ax.set_title("Отражённый ЛЧМ сигнал", fontsize=9, fontweight="normal")
+    ax.set_xlabel("Отсчёты дальности", fontsize=9)
+    ax.set_ylabel("Норм. амплитуда (В)", fontsize=9)
+    ax.grid(True)
+    ax.autoscale(axis="both", tight=True)
     plt.tight_layout()
+    save_fig_as_bmp("resultFig5.bmp")
 
-    return SigSN
+    return SigSN, SigCN, Ni
